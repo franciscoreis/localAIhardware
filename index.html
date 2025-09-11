@@ -5,16 +5,52 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <link rel="icon" href="data:,">
   <script src="localAIhardware.js"></script>
+<style>
 
+    td{text-align: center;vertical-align: center}
+    img{vertical-align: center}
+
+
+</style>
 
 </head>
 
-<body style='font-family:sans-serif;font-style:normal'>
+<script>
+
+    function afterLoad()
+    {
+        update_localAIhardware_mainTable()
+    }
+
+
+    //implemented when needed
+    function TLtranslateFromTo(s)
+    {
+        return s
+    }
+
+
+</script>
+
+
+<body onload='afterLoad()' style='font-family:sans-serif;font-style:normal'>
 <center>
     <br>
-    <font style='font-size:30px'><b>localAIhardware</b><nobr><b>.com</b><i>patibility</i></nobr></font>
+    <img src="https://storage.googleapis.com/cdniverse/LocalAIhardware/images/localaihardware_logo_507X168.jpg" style="aspect-ratio:507/168;width:95%;max-width:450px">
     <br>
-    <br><br>
+    <br>
+    <font style='font-size:22px;letter-spacing:5px'>device compatibility grid</font>
+    <br>
+    <br>
+    <br>
+    <div id="localAIhardware_mainTable"></div>
+    <br>
+    <br>
+    <table style="width:95%;max-width:507px;border:1px solid #000"><tr><th>partner sites</th><th>use data</th><th>contribute</th></tr>
+        <tr><td style="height:40px"><img src="https://storage.googleapis.com/cdniverse/ChatPlaces/chatplaces_text.svg" style="max-height:20px"></td><td>yes</td><td>yes</td></tr>
+    </table>
+    <br>
+    <br>
     <button onClick='hello()'>&nbsp; test &nbsp;</button>
     <br>&nbsp;
 </center>
