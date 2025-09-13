@@ -4,7 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <link rel="icon" href="data:,">
-  <script src="localAIhardware.js"></script>
+<!--
+    <script type="module" src="localAIhardware.mjs">
+            debugger
+            import LocalAIhardware from "/localAIhardware.mjs"
+            LocalAIhardware.hello()
+            window.LocalAIhardware = LocalAIhardware
+</script>
+-->
+
 <style>
 
     td{text-align: center;vertical-align: center}
@@ -13,13 +21,27 @@
 
 </style>
 
-</head>
-
 <script>
+    async function await_import(file)
+        {
+        return await import (file)
+        }
 
-    function afterLoad()
+	var cdniverse = "https://storage.googleapis.com/cdniverse/"
+
+
+
+    async function afterLoad()
     {
-        update_localAIhardware_mainTable()
+
+       const {
+                default: LocalAIhardware,
+                } = await import(
+                    "/localAIhardware/localAIhardware.mjs"
+                )
+
+        window.LocalAIhardware = LocalAIhardware
+        window.LocalAIhardware.update_localAIhardware_mainTable()
     }
 
 
@@ -31,6 +53,9 @@
 
 
 </script>
+
+</head>
+
 
 
 <body onload='afterLoad()' style='font-family:sans-serif;font-style:normal'>
@@ -47,7 +72,7 @@
     <br>
     <br>
     <table style="width:95%;max-width:507px;border:1px solid #000"><tr><th>partner sites</th><th>use data</th><th>contribute</th></tr>
-        <tr><td style="height:40px"><img src="https://storage.googleapis.com/cdniverse/ChatPlaces/chatplaces_text.svg" style="max-height:20px"></td><td>yes</td><td>yes</td></tr>
+        <tr><td style="height:40px"><a target="_blank" href="https://chatplaces.org"><img src="https://storage.googleapis.com/cdniverse/ChatPlaces/chatplaces_text.svg" style="max-height:20px"></a></td><td>yes</td><td>yes</td></tr>
     </table>
     <br>
     <br>
