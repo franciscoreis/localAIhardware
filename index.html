@@ -22,10 +22,6 @@
 </style>
 
 <script>
-    async function await_import(file)
-        {
-        return await import (file)
-        }
 
 	var cdniverse = "https://storage.googleapis.com/cdniverse/"
 
@@ -37,11 +33,15 @@
        const {
                 default: LocalAIhardware,
                 } = await import(
-                    "./localAIhardware.mjs"
+                    "./localAIhardware.mjs" // or https://localaihardware.com/localAIhardware.mjs
+
                 )
 
         window.LocalAIhardware = LocalAIhardware
+
+        //IMPORTANT DOM ELEMENT ID: <div id="localAIhardware_mainTable"></div>
         window.LocalAIhardware.update_localAIhardware_mainTable()
+
     }
 
 
@@ -76,7 +76,7 @@
     </table>
     <br>
     <br>
-    <button onClick='hello()'>&nbsp; test &nbsp;</button>
+    <button onClick='window.LocalAIhardware.hello()'>&nbsp; test &nbsp;</button>
     <br>&nbsp;
 </center>
 </body>

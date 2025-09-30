@@ -65,7 +65,7 @@ function menuSelectModelType(numView = 0, uuid = "") {
     s += "<br><br>"
     const titles = ["engines", "models"]
     for(let n = 0; n < titles.length; n++)
-        s += "<label> &nbsp; <input onClick='update_localAIhardware_mainTable(" + n + ")' type='radio' "+ (numView === n ? "checked" : "") +" name='radios_engines_models' style='margin-bottom:6px'>&nbsp;" + TLtranslateFromTo(titles[n]) + "&nbsp;</label>"
+        s += "<label> &nbsp; <input onClick='window.LocalAIhardware.update_localAIhardware_mainTable(" + n + ")' type='radio' "+ (numView === n ? "checked" : "") +" name='radios_engines_models' style='margin-bottom:6px'>&nbsp;" + TLtranslateFromTo(titles[n]) + "&nbsp;</label>"
 
     if (numView === 0)
     {
@@ -117,7 +117,7 @@ function menuSelectModelType(numView = 0, uuid = "") {
     s += "</table>"
     }
 
-    s += "<table style='margin-top:6px'><tr>"
+    s += "<br><table style='margin-top:6px'><tr>"
     for (let i = 0; i < MyLLMroot.LLMreadinessStates.length; i++)
         s += "<td style='background-color:" + MyLLMroot.LLMreadinessStateBKcolors[i] + "'>&nbsp; " + TLtranslateFromTo(MyLLMroot.LLMreadinessStates[i]) + " &nbsp;</td>"
     s += "</tr></table>"
