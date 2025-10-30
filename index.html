@@ -40,16 +40,41 @@
         window.LocalAIhardware = LocalAIhardware
 
         //IMPORTANT DOM ELEMENT ID: <div id="localAIhardware_mainTable"></div>
+
+
+
         window.LocalAIhardware.update_localAIhardware_mainTable()
 
     }
 
+    async function await_import(file) //more flexibility (mignification, ...)
+    {
+    return await import (file)
+    }
+
 
     //implemented when needed
-    function TLtranslateFromTo(s)
+    function TLtranslateFromTo(s) //replace by your own
     {
         return s
     }
+    function showHideSelector(selector, showNOThide)
+    {
+
+    }
+    function TLtranslateFromTo_removeFont(s) //replace by your own
+    {
+        return TLtranslateFromTo(s)
+    }
+    function showMessageOnSOSforDuration(s, miliseconds) //replace by your own
+    {
+        alert(s)
+    }
+    function showMessageErrorOnSOSforDuration(s, miliseconds) //replace by your own
+    {
+        showMessageOnSOSforDuration(s, miliseconds)
+    }
+
 
 
 </script>
