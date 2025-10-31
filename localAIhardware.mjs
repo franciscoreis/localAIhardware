@@ -18,7 +18,13 @@ var firstCharTime
 var firstCharDuration = []
 
 var last_baselineFeaturesAvailableToText
-var last_agent_device_os
+var last_agent_device_os, last_agent_device_os_STRING
+
+var lastType_bestSettingsForThisType
+var lastElemID_bestSettingsForThisType = "localAIhardware_mainTable"
+var lastOptions_bestSettingsForThisType = ""
+var minAVERAGEmax = 0
+var loadCharProc = 23  //11 12 13 21 22 23 = load FirstChar Processing load FirstChar Processing
 
 var set_localAIhardware_dataGrid
 var rebuildMaps = true
@@ -29,6 +35,11 @@ var mapTypeToObject, setTypeToObject
 var mapAgentBrowserToObject, setAgentBrowserToObject
 
 var textAreaProcessing
+
+var userMode = undefined //not set
+var userLanguage = navigator.language //may be set
+var chrome_builtin_translator
+const translations = new Map()
 
 let deviceWasmOrWebgpu = "wasm";
               if ("gpu" in navigator) {
@@ -180,6 +191,320 @@ async function update_localAIhardware_mainTable(numView = 0)
 
     document.getElementById("localAIhardware_mainTable").innerHTML = s
 
+}
+//-------------------------------------
+async function setUserMode(userMode_param, elemIDforInnerHTML)
+{
+    if(userMode !== undefined || userMode_param === undefined)
+        return
+    userMode = userMode_param
+    if(userMode && userLanguage.indexOf("en") === -1)
+    try
+    {
+    if (!('Translator' in self))
+                return showMessageErrorOnSOSforDuration("no Chrome Built-in AI available", 3000)
+            //    throw new Error('Summarizer API not supported');
+
+
+            const avail = await Translator.availability({
+                sourceLanguage: 'en',
+                targetLanguage: userLanguage,
+                });
+
+        if (avail !== "unavailable")
+           chrome_builtin_translator = await Translator.create({
+                    sourceLanguage: 'en',
+                    targetLanguage: userLanguage,
+                    monitor(m) {
+                        m.addEventListener('downloadprogress', (e) => {
+                            if(elemIDforInnerHTML)
+                                document.getElementById(elemIDforInnerHTML).innerHTML = e.loaded * 100 + "% loading translations..."
+                            // e.loaded * 100
+                        });
+                    },
+                });
+
+    }
+    catch(e)
+    {
+        chrome_builtin_translator = undefined
+    }
+
+}
+//-----------------------------------------------------------------
+async function translate(englishString)
+{
+ let translated = translations.get(englishString)
+ if(translated)
+     return translated
+translated = englishString
+
+ if(chrome_builtin_translator)
+ try
+ {
+
+    translated = await chrome_builtin_translator.translate(englishString, {
+            context: ''
+            ,outputLanguage: userLanguage
+          });
+ }
+ catch(e)
+ {
+ }
+translations.set(englishString, translated)
+return translated
+}
+//-----------------------------------------------------------------
+async function sortBest(type, elemIDforInnerHTML, options, userMode_param)
+{
+    await setUserMode(userMode_param, elemIDforInnerHTML)
+    bestSettingsForThisType(type, elemIDforInnerHTML, options)
+}
+//-----------------------------------------------------------------
+async function bestSettingsForThisType(type = lastType_bestSettingsForThisType, elemIDforInnerHTML = lastElemID_bestSettingsForThisType, options = lastOptions_bestSettingsForThisType)
+{
+    if(!set_localAIhardware_dataGrid)
+       await downloadDataGrid()
+
+    lastElemID_bestSettingsForThisType = elemIDforInnerHTML
+    lastOptions_bestSettingsForThisType = options
+
+    lastType_bestSettingsForThisType = type
+    let s = "<h3>Best available AI <b style='color:green'>" + type + "</b>"
+        + " &nbsp; <button onClick='window.LocalAIhardware.viewDataGridHTML()' style='padding:6px;border-radius:10px'>View Data Grid</button>"
+        + "</h3>"
+
+
+
+    if(!last_agent_device_os)
+        return BaseLineFeatures.get_agent_device_os(true, function(){bestSettingsForThisType(type, elemIDforInnerHTML, options)})
+
+    s += "<br><b>" + last_agent_device_os_STRING + "</b>"
+
+    let s2 = "<br><br><table border=1><tr><th>browser</th>"
+                + "<th>load (ms)<br>min &nbsp; max</th>"
+                + "<th>first char<br>min &nbsp; max</th>"
+                + "<th>processing<br>min &nbsp; max</th>"
+                + "<th>load (ms)<br>(second)</th>"
+                + "<th>first char<br>(second)</th>"
+                + "<th>processing<br>(second)</th>"
+        + "</tr>"
+
+    const mapKeyToObject = new Map()
+    for(let llmmodelTypeToMinMax of set_localAIhardware_dataGrid)
+    if(llmmodelTypeToMinMax.type === type
+        && last_agent_device_os.OperatingSystemName === llmmodelTypeToMinMax.agent_device_os.OperatingSystemName)
+    {
+
+        const key = llmmodelTypeToMinMax.agent_device_os.AgentName
+            + " " + llmmodelTypeToMinMax.llmID
+            + " " + llmmodelTypeToMinMax.modelID
+
+        const object = mapKeyToObject.get(key)
+        if(!object)
+        {
+             mapKeyToObject.set(key, {
+                                        llmID: llmmodelTypeToMinMax.llmID
+                                      , modelID: llmmodelTypeToMinMax.modelID
+                                      ,  numData: llmmodelTypeToMinMax.numData
+                                      , averageLoadingDuration_0: llmmodelTypeToMinMax.averageLoadingDuration_0
+                                      , averageFirstCharDuration_0: llmmodelTypeToMinMax.averageFirstCharDuration_0
+                                      , averageProcessingDuration_0: llmmodelTypeToMinMax.averageProcessingDuration_0
+                                      , averageLoadingDuration_1: llmmodelTypeToMinMax.averageLoadingDuration_1
+                                      , averageFirstCharDuration_1: llmmodelTypeToMinMax.averageFirstCharDuration_1
+                                      , averageProcessingDuration_1: llmmodelTypeToMinMax.averageProcessingDuration_1
+
+                                      , minLoadingDuration_0: llmmodelTypeToMinMax.minLoadingDuration_0
+                                      , minFirstCharDuration_0: llmmodelTypeToMinMax.minFirstCharDuration_0
+                                      , minProcessingDuration_0: llmmodelTypeToMinMax.minProcessingDuration_0
+                                      , minLoadingDuration_1: llmmodelTypeToMinMax.minLoadingDuration_1
+                                      , minFirstCharDuration_1: llmmodelTypeToMinMax.minFirstCharDuration_1
+                                      , minProcessingDuration_1: llmmodelTypeToMinMax.minProcessingDuration_1
+
+                                      , maxLoadingDuration_0: llmmodelTypeToMinMax.maxLoadingDuration_0
+                                      , maxFirstCharDuration_0: llmmodelTypeToMinMax.maxFirstCharDuration_0
+                                      , maxProcessingDuration_0: llmmodelTypeToMinMax.maxProcessingDuration_0
+                                      , maxLoadingDuration_1: llmmodelTypeToMinMax.maxLoadingDuration_1
+                                      , maxFirstCharDuration_1: llmmodelTypeToMinMax.maxFirstCharDuration_1
+                                      , maxProcessingDuration_1: llmmodelTypeToMinMax.averageProcessingDuration_1
+
+
+                    })
+        }
+        else
+        {
+            const tot = object.numData + llmmodelTypeToMinMax.numData
+            object.averageLoadingDuration_0 = (object.averageLoadingDuration_0 * object.numData + llmmodelTypeToMinMax.averageLoadingDuration_0 * llmmodelTypeToMinMax.numData) / tot
+            object.averageFirstCharDuration_0 = (object.averageFirstCharDuration_0 * object.numData + llmmodelTypeToMinMax.averageFirstCharDuration_0 * llmmodelTypeToMinMax.numData) / tot
+            object.averageProcessingDuration_0 = (object.averageProcessingDuration_0 * object.numData + llmmodelTypeToMinMax.averageProcessingDuration_0 * llmmodelTypeToMinMax.numData) / tot
+            object.averageLoadingDuration_1 = (object.averageLoadingDuration_1 * object.numData + llmmodelTypeToMinMax.averageLoadingDuration_1 * llmmodelTypeToMinMax.numData) / tot
+            object.averageFirstCharDuration_1 = (object.averageFirstCharDuration_1 * object.numData + llmmodelTypeToMinMax.averageFirstCharDuration_1 * llmmodelTypeToMinMax.numData) / tot
+            object.averageProcessingDuration_1 = (object.averageProcessingDuration_1 * object.numData + llmmodelTypeToMinMax.averageProcessingDuration_1 * llmmodelTypeToMinMax.numData) / tot
+            object.numData = tot
+
+          object.minLoadingDuration_0 = Math.min(object.minLoadingDuration_0, llmmodelTypeToMinMax.minLoadingDuration_0)
+          object.minFirstCharDuration_0 = Math.min(object.minFirstCharDuration_0, llmmodelTypeToMinMax.minFirstCharDuration_0)
+          object.minProcessingDuration_0 = Math.min(object.minProcessingDuration_0, llmmodelTypeToMinMax.minProcessingDuration_0)
+          object.minLoadingDuration_1 = Math.min(object.minLoadingDuration_1, llmmodelTypeToMinMax.minLoadingDuration_1)
+          object.minFirstCharDuration_1 = Math.min(object.minFirstCharDuration_1, llmmodelTypeToMinMax.minFirstCharDuration_1)
+          object.minProcessingDuration_1 = Math.min(object.minProcessingDuration_1, llmmodelTypeToMinMax.maxProcessingDuration_1)
+
+          object.maxLoadingDuration_0 = Math.min(object.maxLoadingDuration_0, llmmodelTypeToMinMax.maxLoadingDuration_0)
+          object.maxFirstCharDuration_0 = Math.min(object.maxFirstCharDuration_0, llmmodelTypeToMinMax.maxFirstCharDuration_0)
+          object.maxProcessingDuration_0 = Math.min(object.maxProcessingDuration_0, llmmodelTypeToMinMax.maxProcessingDuration_0)
+          object.maxLoadingDuration_1 = Math.min(object.maxLoadingDuration_1, llmmodelTypeToMinMax.maxLoadingDuration_1)
+          object.maxFirstCharDuration_1 = Math.min(object.maxFirstCharDuration_1, llmmodelTypeToMinMax.maxFirstCharDuration_1)
+          object.maxProcessingDuration_1 = Math.min(object.maxProcessingDuration_1, llmmodelTypeToMinMax.minProcessingDuration_1)
+
+        }
+
+        s2 += "<tr><td>" + llmmodelTypeToMinMax.agent_device_os.AgentName + "</td>"
+           + "<td>" + llmmodelTypeToMinMax.averageLoadingDuration_0.toFixed(1) + "<br>" + llmmodelTypeToMinMax.minLoadingDuration_0  + " &nbsp; " + llmmodelTypeToMinMax.maxLoadingDuration_0
+           + "<td>" + llmmodelTypeToMinMax.averageFirstCharDuration_0.toFixed(1) + "<br>" + llmmodelTypeToMinMax.minFirstCharDuration_0  + " &nbsp; " + llmmodelTypeToMinMax.maxFirstCharDuration_0
+           + "<td>" + llmmodelTypeToMinMax.averageProcessingDuration_0.toFixed(1) + "<br>" + llmmodelTypeToMinMax.minProcessingDuration_0  + " &nbsp; " + llmmodelTypeToMinMax.maxProcessingDuration_0
+           + "<td>" + llmmodelTypeToMinMax.averageLoadingDuration_1.toFixed(1) + "<br>" + llmmodelTypeToMinMax.minLoadingDuration_1  + " &nbsp; " + llmmodelTypeToMinMax.maxLoadingDuration_1
+           + "<td>" + llmmodelTypeToMinMax.averageFirstCharDuration_1.toFixed(1) + "<br>" + llmmodelTypeToMinMax.minFirstCharDuration_1  + " &nbsp; " + llmmodelTypeToMinMax.maxFirstCharDuration_1
+           + "<td>" + llmmodelTypeToMinMax.averageProcessingDuration_1.toFixed(1) + "<br>" + llmmodelTypeToMinMax.minProcessingDuration_1  + " &nbsp; " + llmmodelTypeToMinMax.maxProcessingDuration_1
+           + "</tr>"
+
+    }
+
+     let sortBest = ""
+     if(mapKeyToObject.size === 0)
+         sortBest = await translate("NO DATA FOR YOUR DEVICE")
+       else {
+         sortBest = await translate("Ordenate by")
+         for (let i = -1; i <= 1; i++)
+             sortBest += "&nbsp; <label style='vertical-align:sub'><input onClick='LocalAIhardware.minAVERAGEmax=" + i + ";window.LocalAIhardware.bestSettingsForThisType()' type='radio' name='localAIhardware_minAVERAGEmax' " + (LocalAIhardware.minAVERAGEmax === i ? "checked" : "") + ">" + ["min", "avg", "max"][i + 1] + "</label>"
+
+         sortBest += " &nbsp; " + await translate("shown times in milliseconds")
+         sortBest += "<br><table border=1><tr><th title='"+ await translate("total samples")+"'>t</th><th>"+ await translate("browser + Engine + Model") + "</th>"
+             + "<th>icons</th>"
+             + "<th " + (LocalAIhardware.loadCharProc !== 11 ? "onClick='LocalAIhardware.loadCharProc=11;window.LocalAIhardware.bestSettingsForThisType()' style='cursor:pointer;color:blue'" : "") + ">"+ await translate("load") + "<br>min &nbsp; max</th>"
+             + "<th " + (LocalAIhardware.loadCharProc !== 12 ? "onClick='LocalAIhardware.loadCharProc=12;window.LocalAIhardware.bestSettingsForThisType()' style='cursor:pointer;color:blue'" : "") + ">"+ await translate("first char") + "<br>min &nbsp; max</th>"
+             + "<th " + (LocalAIhardware.loadCharProc !== 13 ? "onClick='LocalAIhardware.loadCharProc=13;window.LocalAIhardware.bestSettingsForThisType()' style='cursor:pointer;color:blue'" : "") + ">"+ await translate("processing") + "<br>min &nbsp; max</th>"
+             + "<th " + (LocalAIhardware.loadCharProc !== 21 ? "onClick='LocalAIhardware.loadCharProc=21;window.LocalAIhardware.bestSettingsForThisType()' style='cursor:pointer;color:blue'" : "") + ">"+ await translate("load") + "<br>(second)</th>"
+             + "<th " + (LocalAIhardware.loadCharProc !== 22 ? "onClick='LocalAIhardware.loadCharProc=22;window.LocalAIhardware.bestSettingsForThisType()' style='cursor:pointer;color:blue'" : "") + ">"+ await translate("first char") + "<br>(second)</th>"
+             + "<th " + (LocalAIhardware.loadCharProc !== 23 ? "onClick='LocalAIhardware.loadCharProc=23;window.LocalAIhardware.bestSettingsForThisType()' style='cursor:pointer;color:blue'" : "") + ">"+ await translate("processing") + "<br>(second)</th>"
+             + "</tr>"
+
+
+         const mapAsc = new Map([...mapKeyToObject.entries()].sort(function (a, b) {
+                 let x, y
+                 switch (LocalAIhardware.loadCharProc + " " + LocalAIhardware.minAVERAGEmax) {
+                     case "11 0" :
+                         x = a[1].averageLoadingDuration_0;
+                         y = b[1].averageLoadingDuration_0;
+                         break
+                     case "11 -1" :
+                         x = a[1].minLoadingDuration_0;
+                         y = b[1].minLoadingDuration_0;
+                         break
+                     case "11 1" :
+                         x = a[1].maxLoadingDuration_0;
+                         y = b[1].maxLoadingDuration_0;
+                         break
+                     case "12 0" :
+                         x = a[1].averageFirstCharDuration_0;
+                         y = b[1].averageFirstCharDuration_0;
+                         break
+                     case "12 -1" :
+                         x = a[1].minFirstCharDuration_0;
+                         y = b[1].minFirstCharDuration_0;
+                         break
+                     case "12 1" :
+                         x = a[1].maxFirstCharDuration_0;
+                         y = b[1].maxFirstCharDuration_0;
+                         break
+                     case "13 0" :
+                         x = a[1].averageProcessingDuration_0;
+                         y = b[1].averageProcessingDuration_0;
+                         break
+                     case "13 -1" :
+                         x = a[1].minProcessingDuration_0;
+                         y = b[1].minProcessingDuration_0;
+                         break
+                     case "13 1" :
+                         x = a[1].maxProcessingDuration_0;
+                         y = b[1].maxProcessingDuration_0;
+                         break
+                     case "21 0" :
+                         x = a[1].averageLoadingDuration_1;
+                         y = b[1].averageLoadingDuration_1;
+                         break
+                     case "21 -1" :
+                         x = a[1].minLoadingDuration_1;
+                         y = b[1].minLoadingDuration_1;
+                         break
+                     case "21 1" :
+                         x = a[1].maxLoadingDuration_1;
+                         y = b[1].maxLoadingDuration_1;
+                         break
+                     case "22 0" :
+                         x = a[1].averageFirstCharDuration_1;
+                         y = b[1].averageFirstCharDuration_1;
+                         break
+                     case "22 -1" :
+                         x = a[1].minFirstCharDuration_1;
+                         y = b[1].minFirstCharDuration_1;
+                         break
+                     case "22 1" :
+                         x = a[1].maxFirstCharDuration_1;
+                         y = b[1].maxFirstCharDuration_1;
+                         break
+                     case "23 0" :
+                         x = a[1].averageProcessingDuration_1;
+                         y = b[1].averageProcessingDuration_1;
+                         break
+                     case "23 -1" :
+                         x = a[1].minProcessingDuration_1;
+                         y = b[1].minProcessingDuration_1;
+                         break
+                     case "23 1" :
+                         x = a[1].maxProcessingDuration_1;
+                         y = b[1].maxProcessingDuration_1;
+                         break
+                     default:
+                         return 1
+                 }
+                 return x === y ? 0 : x < y ? -1 : 1
+             }
+         ))
+
+
+         for (let [key, llmmodelTypeToMinMax] of mapAsc)
+         {
+
+             const llm = MyLLMroot.mapIDtoMyLLMs.get(llmmodelTypeToMinMax.llmID)
+             const model = ModelOfMyLLMroot.modelsOfMyLLM.get(llmmodelTypeToMinMax.modelID)
+             sortBest += "<tr style='" + (key.startsWith(last_agent_device_os.AgentName) ? ";background-color:#ffb" : "") + "'><td>" + llmmodelTypeToMinMax.numData + "</td><td style='text-align:left'>" + key + "</td>"
+                 + "<td>" + llm?.icon("40px") + model?.icon("40px") + "</td>"
+                 + "<td>" + boldIf(11, 0, llmmodelTypeToMinMax.averageLoadingDuration_0.toFixed(1)) + "<br>" + boldIf(11, -1, llmmodelTypeToMinMax.minLoadingDuration_0) + " &nbsp; " + boldIf(11, 1, llmmodelTypeToMinMax.maxLoadingDuration_0)
+                 + "<td>" + boldIf(12, 0, llmmodelTypeToMinMax.averageFirstCharDuration_0.toFixed(1)) + "<br>" + boldIf(12, -1, llmmodelTypeToMinMax.minFirstCharDuration_0) + " &nbsp; " + boldIf(12, 1, llmmodelTypeToMinMax.maxFirstCharDuration_0)
+                 + "<td>" + boldIf(13, 0, llmmodelTypeToMinMax.averageProcessingDuration_0.toFixed(1)) + "<br>" + boldIf(13, -1, llmmodelTypeToMinMax.minProcessingDuration_0) + " &nbsp; " + boldIf(13, 1, llmmodelTypeToMinMax.maxProcessingDuration_0)
+                 + "<td>" + boldIf(21, 0, llmmodelTypeToMinMax.averageLoadingDuration_1.toFixed(1)) + "<br>" + boldIf(21, -1, llmmodelTypeToMinMax.minLoadingDuration_1) + " &nbsp; " + boldIf(21, 1, llmmodelTypeToMinMax.maxLoadingDuration_1)
+                 + "<td>" + boldIf(22, 0, llmmodelTypeToMinMax.averageFirstCharDuration_1.toFixed(1)) + "<br>" + boldIf(22, -1, llmmodelTypeToMinMax.minFirstCharDuration_1) + " &nbsp; " + boldIf(22, 1, llmmodelTypeToMinMax.maxFirstCharDuration_1)
+                 + "<td>" + boldIf(23, 0, llmmodelTypeToMinMax.averageProcessingDuration_1.toFixed(1)) + "<br>" + boldIf(23, -1, llmmodelTypeToMinMax.minProcessingDuration_1) + " &nbsp; " + boldIf(23, 1, llmmodelTypeToMinMax.maxProcessingDuration_1)
+                 + "</tr>"
+         }
+         sortBest += "</table><br>" + await translate("Notes: sorted from fastest to slowest. Samples are compatible with your browser and operating system.")
+
+     } //size > 0
+
+    let result
+    if(options.indexOf("only_sortBest") !== -1)
+        result = sortBest
+    else
+        result = s + "<br><br>" + sortBest + s2
+
+
+    document.getElementById(elemIDforInnerHTML).innerHTML = result + "<br>&nbsp;"
+}
+//-----------------------------------------------------------------
+function boldIf(loadCharProc_param, minAVERAGEmax_param, s)
+{
+return loadCharProc_param === LocalAIhardware.loadCharProc && minAVERAGEmax_param === LocalAIhardware.minAVERAGEmax
+    ? "<b style='color:green'>" + s + "</b>" : s
 }
 //-----------------------------------------------------------------
 function menuSelectModelType(numView = 0, uuid = "") {
@@ -364,7 +689,7 @@ async function viewDataGrid(reload)
        s += "<tr><td style='text-align:right'>&nbsp;" + llmmodelTypeToMinMax.numData + " <button onClick='MyLLMroot.calculateMenu_llm_model(\"" + llmmodelTypeToMinMax.llmID + "\",\"" + llmmodelTypeToMinMax.modelID + "\",\"" + llmmodelTypeToMinMax.type +"\")'>+</button>&nbsp;</td>"
            + "<td>" + llmmodelTypeToMinMax.llmID + "</td>"
            + "<td>" + llmmodelTypeToMinMax.modelID + "</td>"
-           + "<td>" + llmmodelTypeToMinMax.type + "</td>"
+           + "<td><a href='javascript:window.LocalAIhardware.bestSettingsForThisType(\""+llmmodelTypeToMinMax.type+"\")'>" + llmmodelTypeToMinMax.type + "</a></td>"
            + "<td><textarea style='width:130px;height:44px'>" + llmmodelTypeToMinMax.baseline_features + "</textarea></td>"
            + "<td>" + llmmodelTypeToMinMax.agent_device_os.DeviceClass + "<br>" + llmmodelTypeToMinMax.agent_device_os.DeviceName + "</td>"
            + "<td>" + llmmodelTypeToMinMax.agent_device_os.OperatingSystemClass + "<br>" + llmmodelTypeToMinMax.agent_device_os.OperatingSystemName + "<br>" + llmmodelTypeToMinMax.agent_device_os.OperatingSystemVersion +  "</td>"
@@ -1290,7 +1615,7 @@ let s = "<table><tr><th rowspan='2' style='width:1px'>" + llm_selected.icon() + 
       + "<tr><td>Application</td><td><input id='input_localAIhardware_application' type='text' disabled value='" + (BaseLineFeatures.calculateOnUniqueTab ? "none" : document.location.hostname) + "' style='width:100px'></td></tr>"
 
        + "<td colspan=4>Browser Baseline Features<br><textarea style='width:300px;height:100px' disabled>" + last_baselineFeaturesAvailableToText +"</textarea></td></tr>"
-       + "<tr><td colspan=4>Agent + Device + Operating System<br><textarea id='textarea_agent_device_os' style='width:300px;height:100px' disabled>" + last_agent_device_os +"</textarea></td></tr>"
+       + "<tr><td colspan=4>Agent + Device + Operating System<br><textarea id='textarea_agent_device_os' style='width:300px;height:100px' disabled>" + last_agent_device_os_STRING +"</textarea></td></tr>"
        + "<tr><th>timing</th><th>first</th><th>second</th><th>&nbsp;</th></tr>"
        + "<tr><td>Loading</td><td id='loadingDuration_0' style='text-align:right'>"+ (firstOrSecond === 0 ? "no data" : loadingDuration[0].toFixed(1) + " ms") +"</td><td id='loadingDuration_1' style='text-align:right'>no data</td><td>&nbsp;</td></tr>"
        + "<tr><td>First char received</td><td id='firstCharDuration_0' style='text-align:right'>"+ (firstOrSecond === 0 ? "no data" : firstCharDuration[0].toFixed(1) + " ms") +"</td><td id='firstCharDuration_1' style='text-align:right'>no data</td><td>&nbsp;</td></tr>"
@@ -2157,7 +2482,8 @@ class MyChromeBuiltInAI extends MyLocalLLMroot {
 
         // read https://github.com/mlc-ai/web-llm/blob/main/src/config.ts#L293 and present choices!
         this.addModelsFromArray([    //  https://huggingface.co/mlc-ai
-             new ModelOfMyLLMroot(MyChromeBuiltInAI.myChromeBuiltInAI, "gemini_nano_summarizer", "Gemini Nano Summarizer", ModelOfMyLLMroot.MODEL_TYPE_SUMMARY, ModelOfMyLLMroot.MODEL_GEMINI)
+             new ModelOfMyLLMroot(MyChromeBuiltInAI.myChromeBuiltInAI, "gemini_nano", "Gemini Nano", ModelOfMyLLMroot.MODEL_TYPE_CHAT, ModelOfMyLLMroot.MODEL_GEMINI)
+           , new ModelOfMyLLMroot(MyChromeBuiltInAI.myChromeBuiltInAI, "gemini_nano_summarizer", "Gemini Nano Summarizer", ModelOfMyLLMroot.MODEL_TYPE_SUMMARY, ModelOfMyLLMroot.MODEL_GEMINI)
            , new ModelOfMyLLMroot(MyChromeBuiltInAI.myChromeBuiltInAI, "gemini_nano_translator", "Gemini Nano Translator", ModelOfMyLLMroot.MODEL_TYPE_TRANSLATOR, ModelOfMyLLMroot.MODEL_GEMINI)
         ])
     }
@@ -3079,9 +3405,9 @@ fetch(url, {
 
 }
 //---------------------------------
-static async get_agent_device_os(first = true)
+static async get_agent_device_os(first = true, callAtEnd)
 {
-     const url = location.protocol + "//" + (location.hostname === "localhost"
+     const url = location.protocol + "//" + (location.host.indexOf("localhost:") !== -1
                                                     ? "api.localaihardware.localhost:" + location.port
                                                     : "api.localaihardware.com") + "/get_agent_device_os";
 
@@ -3108,10 +3434,15 @@ static async get_agent_device_os(first = true)
 })
 .then(responseData => {
 
-        last_agent_device_os =  JSON.stringify(responseData)
-        document.getElementById("textarea_agent_device_os").innerHTML = last_agent_device_os
+        last_agent_device_os = responseData
+        last_agent_device_os_STRING =  JSON.stringify(responseData)
+        const textArea = document.getElementById("textarea_agent_device_os")
+        if(textArea)
+            textArea.innerHTML = last_agent_device_os_STRING
         if(first) //browser may send more INFO for received Permissions-Policy and Accept-CH in headers
-            BaseLineFeatures.get_agent_device_os(false)
+            BaseLineFeatures.get_agent_device_os(false, callAtEnd)
+        else if(callAtEnd)
+            callAtEnd()
 })
 .catch(error => {
      showMessageOnSOSforDuration("ERROR: " + error, 3000)
@@ -3166,6 +3497,10 @@ const LocalAIhardware = {
     MyLLMroot,
     viewDataGridHTML,
     showAll_viewDataGrid,
+    bestSettingsForThisType,
+    minAVERAGEmax,
+    loadCharProc,
+    sortBest,
 }
 
 window.BaseLineFeatures = BaseLineFeatures
