@@ -207,7 +207,7 @@ public class LocalAIhardware implements Serializable
                         case "manual_memoryzSize": localAIhardware.manual_memorySize = p.getValueAsInt(); break;
                         case "detected_diskSize": localAIhardware.detected_diskSize = p.getFloatValue(); break;
 
-                        case "application": localAIhardware.application = p.getText(); break;
+                        case "application": localAIhardware.application = p.getText();
 
                         case "baseline_features":
                             localAIhardware.baseline_features = p.getText();
@@ -560,7 +560,6 @@ static public void saveToBigQuery(RequestResponseInfo rri, LocalAIhardware local
 
                     + "\n").getBytes("UTF-8"));
 
-
             gzipOS.flush();
 			gzipOS.close();
 
@@ -579,10 +578,10 @@ static public void saveToBigQuery(RequestResponseInfo rri, LocalAIhardware local
         }
     }
 //--------------------------------------------------
-    private static String filenameLocalOrProduction()
-    {
-        return (TapalifeServlet.runLocal ? "local_" : "") + FILENAME;
-    }
+private static String filenameLocalOrProduction()
+{
+    return (TapalifeServlet.runLocal ? "local_" : "") + FILENAME;
+}
 //------------------------------------------------------------------
 private static List<LocalAIhardware> getLocalAIhardwareList(RequestResponseInfo rri, String whereString, int daysBefore, long datetimeUpTo)
 {

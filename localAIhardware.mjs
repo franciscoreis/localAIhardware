@@ -3346,8 +3346,8 @@ const data = {
         , manual_memoryzSize: manual_memoryzSize || 0
         , application : application
         , detected_diskSize: memorySizeForOriginPrivateFileSystem || 0
-        ,  baseline_features: baseline_features
-        ,  agent_device_os: agent_device_os
+        , baseline_features: baseline_features
+        , agent_device_os: last_agent_device_os_STRING
         , llm_uniqueID: llm_uniqueID
         , modelOfMyLLM_id: modelOfMyLLM_id
         , selectedModelType: selectedModelType
