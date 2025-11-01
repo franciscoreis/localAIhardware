@@ -27,6 +27,8 @@ var lastCallWhenSelect_bestSettingsForThisType
 var minAVERAGEmax = 0
 var loadCharProc = 23  //11 12 13 21 22 23 = load FirstChar Processing load FirstChar Processing
 
+var lastNumView_menuSelectModelType = 0
+
 var set_localAIhardware_dataGrid
 var rebuildMaps = true
 
@@ -174,7 +176,7 @@ function default_call_bestSettingsForThisType(type, llmID, modelID, uuid = "")
 showMessageErrorOnSOSforDuration("Can be a call to an application with parameters: TYPE=" + type + "  LLMID=" + llmID + "  MODELID=" + modelID + "  UUID=" + uuid)
 }
 //-----------------------------------------------------------------
-async function update_localAIhardware_mainTable(numView = 0)
+async function update_localAIhardware_mainTable(numView)
 {
 
     let s
@@ -537,10 +539,12 @@ return loadCharProc_param === LocalAIhardware.loadCharProc && minAVERAGEmax_para
     ? "<b style='color:green'>" + s + "</b>" : s
 }
 //-----------------------------------------------------------------
-function menuSelectModelType(numView = 0, uuid = "") {
+function menuSelectModelType(numView = lastNumView_menuSelectModelType, uuid = "") {
     const type = ModelOfMyLLMroot.selectedModelType
 
     let s = ""
+
+    lastNumView_menuSelectModelType = numView
 
     s += "<button onClick='window.LocalAIhardware.viewDataGridHTML()' style='padding:6px;border-radius:10px'>View Data Grid</button>"
 
@@ -618,7 +622,10 @@ function menuSelectModelType(numView = 0, uuid = "") {
         s += "<tr>"
             + "<td style='border-right:1px solid #fff'>" + modelOfMyLLM.icon("20px") + "</td><td style='text-align:left;border-left:1px solid #fff'>" + modelOfMyLLM.name + "</td>"
         for (let [name, llm] of MyLLMroot.mapMyLLMs)
-            s += "<td onClick='LocalAIhardware.MyLLMroot.calculate_llmID_modelName(\""+llm.uniqueID+"\",\""+modelOfMyLLM.name+"\")' class='table_with_all_llm_" + llm.uniqueID + "' style='background-color:" + llm.rowColor() + "'>" + (llm.numModelsOfLLM(modelOfMyLLM) || "") + "</td>"
+        {
+            const numModelsOfLLM = llm.numModelsOfLLMwithType(type, modelOfMyLLM)
+            s += "<td onClick='LocalAIhardware.MyLLMroot.calculate_llmID_modelName(\""+llm.uniqueID+"\",\""+modelOfMyLLM.name+"\")' class='table_with_all_llm_" + llm.uniqueID + "' style='background-color:" + llm.rowColor() + (numModelsOfLLM ? ";cursor:pointer" : "") + "'>" + (numModelsOfLLM || "") + "</td>"
+        }
 
         s += "</tr>"
     }
