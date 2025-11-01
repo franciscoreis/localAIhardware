@@ -23,6 +23,7 @@ var last_agent_device_os, last_agent_device_os_STRING
 var lastType_bestSettingsForThisType
 var lastElemID_bestSettingsForThisType = "localAIhardware_mainTable"
 var lastOptions_bestSettingsForThisType = ""
+var lastCallWhenSelect_bestSettingsForThisType
 var minAVERAGEmax = 0
 var loadCharProc = 23  //11 12 13 21 22 23 = load FirstChar Processing load FirstChar Processing
 
@@ -168,11 +169,15 @@ function formatBytes(bytes, decimals = 2)
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
 }
 //-----------------------------------------------------------------
+function default_call_bestSettingsForThisType(type, llmID, modelID, uuid = "")
+{
+showMessageErrorOnSOSforDuration("Can be a call to an application with parameters: TYPE=" + type + "  LLMID=" + llmID + "  MODELID=" + modelID + "  UUID=" + uuid)
+}
+//-----------------------------------------------------------------
 async function update_localAIhardware_mainTable(numView = 0)
 {
 
     let s
-
     if(first_update_localAIhardware_mainTable)
     {
         first_update_localAIhardware_mainTable = false
@@ -255,13 +260,14 @@ translations.set(englishString, translated)
 return translated
 }
 //-----------------------------------------------------------------
-async function sortBest(type, elemIDforInnerHTML, options, userMode_param)
+async function sortBest(type, elemIDforInnerHTML, options, userMode_param, callWhenSelect)
 {
     await setUserMode(userMode_param, elemIDforInnerHTML)
-    bestSettingsForThisType(type, elemIDforInnerHTML, options)
+    bestSettingsForThisType(type, elemIDforInnerHTML, options, callWhenSelect)
 }
 //-----------------------------------------------------------------
-async function bestSettingsForThisType(type = lastType_bestSettingsForThisType, elemIDforInnerHTML = lastElemID_bestSettingsForThisType, options = lastOptions_bestSettingsForThisType)
+async function bestSettingsForThisType(type = lastType_bestSettingsForThisType, elemIDforInnerHTML = lastElemID_bestSettingsForThisType
+                                       , options = lastOptions_bestSettingsForThisType, callWhenSelect = lastCallWhenSelect_bestSettingsForThisType)
 {
     if(!set_localAIhardware_dataGrid)
        await downloadDataGrid()
@@ -270,7 +276,15 @@ async function bestSettingsForThisType(type = lastType_bestSettingsForThisType, 
     lastOptions_bestSettingsForThisType = options
 
     lastType_bestSettingsForThisType = type
-    let s = "<h3>Best available AI <b style='color:green'>" + type + "</b>"
+    lastCallWhenSelect_bestSettingsForThisType = callWhenSelect
+
+
+    let select = "<select onClick='event.stopPropagation()' onChange='window.LocalAIhardware.bestSettingsForThisType(this.value)'>"
+    for (let [name, modelOfMyLLM] of ModelOfMyLLMroot.modelTypes)
+        select += "<option value='" + name + "' " + (name == type ? "selected" : "") + ">" + name + "</option>"
+    select += "</select>"
+
+    let s = "<h3>" + select + "&nbsp; Best available AI <b style='color:green'>" + type + "</b>"
         + " &nbsp; <button onClick='window.LocalAIhardware.viewDataGridHTML()' style='padding:6px;border-radius:10px'>View Data Grid</button>"
         + "</h3>"
 
@@ -292,7 +306,7 @@ async function bestSettingsForThisType(type = lastType_bestSettingsForThisType, 
 
     const mapKeyToObject = new Map()
     for(let llmmodelTypeToMinMax of set_localAIhardware_dataGrid)
-    if(llmmodelTypeToMinMax.type === type
+    if((llmmodelTypeToMinMax.type === type || ModelOfMyLLMroot.MODEL_TYPE_ALL === type)
         && last_agent_device_os.OperatingSystemName === llmmodelTypeToMinMax.agent_device_os.OperatingSystemName)
     {
 
@@ -306,7 +320,10 @@ async function bestSettingsForThisType(type = lastType_bestSettingsForThisType, 
              mapKeyToObject.set(key, {
                                         llmID: llmmodelTypeToMinMax.llmID
                                       , modelID: llmmodelTypeToMinMax.modelID
-                                      ,  numData: llmmodelTypeToMinMax.numData
+                                      , numData: llmmodelTypeToMinMax.numData
+                                      , agent_device_os: llmmodelTypeToMinMax.agent_device_os
+                                      , AgentVersion_min: llmmodelTypeToMinMax.agent_device_os.AgentVersion
+                                      , AgentVersion_max: llmmodelTypeToMinMax.agent_device_os.AgentVersion
                                       , averageLoadingDuration_0: llmmodelTypeToMinMax.averageLoadingDuration_0
                                       , averageFirstCharDuration_0: llmmodelTypeToMinMax.averageFirstCharDuration_0
                                       , averageProcessingDuration_0: llmmodelTypeToMinMax.averageProcessingDuration_0
@@ -333,6 +350,12 @@ async function bestSettingsForThisType(type = lastType_bestSettingsForThisType, 
         }
         else
         {
+           if(object.AgentVersion_min > llmmodelTypeToMinMax.agent_device_os.AgentVersion)
+             object.AgentVersion_min = llmmodelTypeToMinMax.agent_device_os.AgentVersion
+           if(object.AgentVersion_max < llmmodelTypeToMinMax.agent_device_os.AgentVersion)
+             object.AgentVersion_max = llmmodelTypeToMinMax.agent_device_os.AgentVersion
+
+
             const tot = object.numData + llmmodelTypeToMinMax.numData
             object.averageLoadingDuration_0 = (object.averageLoadingDuration_0 * object.numData + llmmodelTypeToMinMax.averageLoadingDuration_0 * llmmodelTypeToMinMax.numData) / tot
             object.averageFirstCharDuration_0 = (object.averageFirstCharDuration_0 * object.numData + llmmodelTypeToMinMax.averageFirstCharDuration_0 * llmmodelTypeToMinMax.numData) / tot
@@ -477,7 +500,14 @@ async function bestSettingsForThisType(type = lastType_bestSettingsForThisType, 
 
              const llm = MyLLMroot.mapIDtoMyLLMs.get(llmmodelTypeToMinMax.llmID)
              const model = ModelOfMyLLMroot.modelsOfMyLLM.get(llmmodelTypeToMinMax.modelID)
-             sortBest += "<tr style='" + (key.startsWith(last_agent_device_os.AgentName) ? ";background-color:#ffb" : "") + "'><td>" + llmmodelTypeToMinMax.numData + "</td><td style='text-align:left'>" + key + "</td>"
+             const compatible = key.startsWith(last_agent_device_os.AgentName)
+             let llmANDmodel = llm.name + " => " + model.name
+             if(!callWhenSelect)
+                 callWhenSelect = "LocalAIhardware.default_call_bestSettingsForThisType"
+             llmANDmodel = "<a href='Javascript:"+callWhenSelect+"(\""+ type +"\",\"" + llmmodelTypeToMinMax.llmID + "\",\"" + llmmodelTypeToMinMax.modelID + "\")'>" + llmANDmodel + "</a>"
+
+             sortBest += "<tr style='" + (compatible ? "" : ";background-color:#ffb") + "'><td>" + llmmodelTypeToMinMax.numData + "</td>"
+                 + "<td style='text-align:left'>" + llmmodelTypeToMinMax.agent_device_os.OperatingSystemName + " &nbsp; <b>" + llmmodelTypeToMinMax.agent_device_os.AgentName + " " + llmmodelTypeToMinMax.AgentVersion_min + (llmmodelTypeToMinMax.AgentVersion_min !== llmmodelTypeToMinMax.AgentVersion_max ? "-" + llmmodelTypeToMinMax.AgentVersion_max : "")  + "</b><br>" + llmANDmodel + "</td>"
                  + "<td>" + llm?.icon("40px") + model?.icon("40px") + "</td>"
                  + "<td>" + boldIf(11, 0, llmmodelTypeToMinMax.averageLoadingDuration_0.toFixed(1)) + "<br>" + boldIf(11, -1, llmmodelTypeToMinMax.minLoadingDuration_0) + " &nbsp; " + boldIf(11, 1, llmmodelTypeToMinMax.maxLoadingDuration_0)
                  + "<td>" + boldIf(12, 0, llmmodelTypeToMinMax.averageFirstCharDuration_0.toFixed(1)) + "<br>" + boldIf(12, -1, llmmodelTypeToMinMax.minFirstCharDuration_0) + " &nbsp; " + boldIf(12, 1, llmmodelTypeToMinMax.maxFirstCharDuration_0)
@@ -517,7 +547,7 @@ function menuSelectModelType(numView = 0, uuid = "") {
     let num = 0
     for (let label of ["beta testers", "under construction"])
     {
-        s += "<label>&nbsp;<input type='radio' onClick='MyLLMroot.showLLmsUnderConstruction=" + num + ";ModelOfMyLLMroot.selectThisType();' name='radios_choose_under_construction' " + (MyLLMroot.showLLmsUnderConstruction === num ? "checked" : "") + ">&nbsp;" + TLtranslateFromTo(label) + "&nbsp;</label>"
+        s += "<label>&nbsp;<input type='radio' onClick='MyLLMroot.showLLmsUnderConstruction=" + num + ";LocalAIhardware.ModelOfMyLLMroot.selectThisType();' name='radios_choose_under_construction' " + (MyLLMroot.showLLmsUnderConstruction === num ? "checked" : "") + ">&nbsp;" + TLtranslateFromTo(label) + "&nbsp;</label>"
         num++
     }
 
@@ -530,7 +560,7 @@ function menuSelectModelType(numView = 0, uuid = "") {
     s += "<br><br>"
 
     /*
-    let select = "<select onClick='event.stopPropagation()' onChange='ModelOfMyLLMroot.selectThisType(\"" + uuid + "\", this.value)'>"
+    let select = "<select onClick='event.stopPropagation()' onChange='LocalAIhardware.ModelOfMyLLMroot.selectThisType(\"" + uuid + "\", this.value)'>"
     for (let [name, modelOfMyLLM] of ModelOfMyLLMroot.modelTypes)
         select += "<option value='" + name + "' " + (name == type ? "selected" : "") + ">" + name + "</option>"
     select += "</select>"
@@ -538,7 +568,7 @@ function menuSelectModelType(numView = 0, uuid = "") {
     */
 
     for (let [name, modelOfMyLLM] of ModelOfMyLLMroot.modelTypes)
-        s += "&nbsp;<button onClick='ModelOfMyLLMroot.selectThisType(\"" + uuid + "\",\"" + name + "\")' style='"+ (name === ModelOfMyLLMroot.selectedModelType ? "background-color:white" : "") +"'>" + name + "</button>&nbsp;"
+        s += "&nbsp;<button onClick='LocalAIhardware.ModelOfMyLLMroot.selectThisType(\"" + uuid + "\",\"" + name + "\")' style='"+ (name === ModelOfMyLLMroot.selectedModelType ? "background-color:white" : "") +"'>" + name + "</button>&nbsp;"
 
     s += "<br><br>"
     const titles = ["engines", "models"]
@@ -3501,6 +3531,8 @@ const LocalAIhardware = {
     minAVERAGEmax,
     loadCharProc,
     sortBest,
+    ModelOfMyLLMroot,
+    default_call_bestSettingsForThisType,
 }
 
 window.BaseLineFeatures = BaseLineFeatures
