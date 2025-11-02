@@ -779,7 +779,11 @@ function showAll_viewDataGrid()
 //-----------------------------------------------------------------
 async function downloadDataGrid()
 {
-const url = "https://storage.googleapis.com/localaihardware/local_localaihardware.csv"
+  const url = "https://storage.googleapis.com/localaihardware/"
+      + (location.hostname === "localhost"
+          ? "local_" //for local debugging
+          : "")
+       + "localaihardware.csv"
 
   const res = await fetch(url, { cache: "no-store" }); // or "force-cache"
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
