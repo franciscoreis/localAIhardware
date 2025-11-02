@@ -299,7 +299,9 @@ async function bestSettingsForThisType(type = lastType_bestSettingsForThisType, 
 
     s += "<br><b>" + last_agent_device_os_STRING + "</b>"
 
-    let s2 = "<br><br><table border=1><tr><th>browser</th>"
+    let s2 = "<br><br><table border=1><tr>"
+                + (LocalAIhardware.filterBySameOS ? "" : "<th>Oper. System</th>")
+                + "<th>browser</th>"
                 + "<th>load (ms)<br>min &nbsp; max</th>"
                 + "<th>first char<br>min &nbsp; max</th>"
                 + "<th>processing<br>min &nbsp; max</th>"
@@ -387,7 +389,9 @@ async function bestSettingsForThisType(type = lastType_bestSettingsForThisType, 
 
         }
 
-        s2 += "<tr><td>" + llmmodelTypeToMinMax.agent_device_os.AgentName + "</td>"
+        s2 += "<tr>"
+           + (LocalAIhardware.filterBySameOS ? "" : "<td>" + llmmodelTypeToMinMax.agent_device_os.OperatingSystemName + "</td>")
+           + "<td>" + llmmodelTypeToMinMax.agent_device_os.AgentName + "</td>"
            + "<td>" + llmmodelTypeToMinMax.averageLoadingDuration_0.toFixed(1) + "<br>" + llmmodelTypeToMinMax.minLoadingDuration_0  + " &nbsp; " + llmmodelTypeToMinMax.maxLoadingDuration_0
            + "<td>" + llmmodelTypeToMinMax.averageFirstCharDuration_0.toFixed(1) + "<br>" + llmmodelTypeToMinMax.minFirstCharDuration_0  + " &nbsp; " + llmmodelTypeToMinMax.maxFirstCharDuration_0
            + "<td>" + llmmodelTypeToMinMax.averageProcessingDuration_0.toFixed(1) + "<br>" + llmmodelTypeToMinMax.minProcessingDuration_0  + " &nbsp; " + llmmodelTypeToMinMax.maxProcessingDuration_0
@@ -402,17 +406,18 @@ async function bestSettingsForThisType(type = lastType_bestSettingsForThisType, 
 
         sortBest += "<label><input onClick='LocalAIhardware.filterBySameOS=this.checked;window.LocalAIhardware.bestSettingsForThisType()' type='checkbox' "+ (LocalAIhardware.filterBySameOS ? "checked" : "") +">same OS</label>"
             + " &nbsp;<label><input onClick='LocalAIhardware.filterBySameBrowser=this.checked;window.LocalAIhardware.bestSettingsForThisType()' type='checkbox' "+ (LocalAIhardware.filterBySameBrowser ? "checked" : "") +">same browser</label>"
-            + " &nbsp; &nbsp; "
+            + " &nbsp; &nbsp; &nbsp;"
 
 
      if(mapKeyToObject.size === 0)
          sortBest += await translate("NO DATA FOR YOUR DEVICE")
        else {
-         sortBest += await translate("Ordenate by")
+         sortBest += "<table style='display:inline-block'><tr><td>" + await translate("Ordenate by") + "</td><td>"
          for (let i = -1; i <= 1; i++)
              sortBest += "&nbsp; <label style='vertical-align:sub'><input onClick='LocalAIhardware.minAVERAGEmax=" + i + ";window.LocalAIhardware.bestSettingsForThisType()' type='radio' name='localAIhardware_minAVERAGEmax' " + (LocalAIhardware.minAVERAGEmax === i ? "checked" : "") + ">" + ["min", "avg", "max"][i + 1] + "</label>"
+         sortBest += "</td></tr></table>"
 
-         sortBest += " &nbsp; " + await translate("shown times in milliseconds")
+         sortBest += " &nbsp; &nbsp; " + await translate("shown times in milliseconds")
          sortBest += "<br><table border=1><tr><th title='"+ await translate("total samples")+"'>t</th><th>"+ await translate("browser + Engine + Model") + "</th>"
              + "<th>icons</th>"
              + "<th " + (LocalAIhardware.loadCharProc !== 11 ? "onClick='LocalAIhardware.loadCharProc=11;window.LocalAIhardware.bestSettingsForThisType()' style='cursor:pointer;color:blue'" : "") + ">"+ await translate("load") + "<br>min &nbsp; max</th>"
@@ -642,7 +647,7 @@ function menuSelectModelType(numView = lastNumView_menuSelectModelType, uuid = "
     s += "</table>"
     }
 
-    s += "<br><table style='margin-top:6px'><tr>"
+    s += "<table style='margin-top:6px'><tr>"
     for (let i = 0; i < MyLLMroot.LLMreadinessStates.length; i++)
         s += "<td style='background-color:" + MyLLMroot.LLMreadinessStateBKcolors[i] + "'>&nbsp; " + TLtranslateFromTo(MyLLMroot.LLMreadinessStates[i]) + " &nbsp;</td>"
     s += "</tr></table>"
@@ -780,7 +785,7 @@ function showAll_viewDataGrid()
 async function downloadDataGrid()
 {
   const url = "https://storage.googleapis.com/localaihardware/"
-      + (location.hostname === "localhost"
+      + (false && location.hostname === "localhost"
           ? "local_" //for local debugging
           : "")
        + "localaihardware.csv"
