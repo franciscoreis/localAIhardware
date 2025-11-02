@@ -379,7 +379,7 @@ static public void saveToBigQuery(RequestResponseInfo rri, LocalAIhardware local
                 llmmodelTypeToMinMax.minDatetime = Math.min(llmmodelTypeToMinMax.minDatetime, localAIhardware.datetime);
                 llmmodelTypeToMinMax.maxDatetime = Math.max(llmmodelTypeToMinMax.maxDatetime, localAIhardware.datetime);
 
-                llmmodelTypeToMinMax.averageLoadingDuration_0 += localAIhardware.loadingDuration_0;
+               llmmodelTypeToMinMax.averageLoadingDuration_0 += localAIhardware.loadingDuration_0;
                 llmmodelTypeToMinMax.minLoadingDuration_0 = Math.min(llmmodelTypeToMinMax.minLoadingDuration_0, localAIhardware.loadingDuration_0);
                 llmmodelTypeToMinMax.maxLoadingDuration_0 = Math.max(llmmodelTypeToMinMax.maxLoadingDuration_0, localAIhardware.loadingDuration_0);
 
@@ -387,22 +387,22 @@ static public void saveToBigQuery(RequestResponseInfo rri, LocalAIhardware local
                 llmmodelTypeToMinMax.minLoadingDuration_1 = Math.min(llmmodelTypeToMinMax.minLoadingDuration_1, localAIhardware.loadingDuration_1);
                 llmmodelTypeToMinMax.maxLoadingDuration_1 = Math.max(llmmodelTypeToMinMax.maxLoadingDuration_1, localAIhardware.loadingDuration_1);
 
+                llmmodelTypeToMinMax.averageFirstCharDuration_0 += localAIhardware.firstCharDuration_0;
+                llmmodelTypeToMinMax.minFirstCharDuration_0 = Math.min(llmmodelTypeToMinMax.minFirstCharDuration_0, localAIhardware.firstCharDuration_0);
+                llmmodelTypeToMinMax.maxFirstCharDuration_0 = Math.max(llmmodelTypeToMinMax.maxFirstCharDuration_0, localAIhardware.firstCharDuration_0);
+
+                llmmodelTypeToMinMax.averageFirstCharDuration_1 += localAIhardware.firstCharDuration_1;
+                llmmodelTypeToMinMax.minFirstCharDuration_1 = Math.min(llmmodelTypeToMinMax.minFirstCharDuration_1, localAIhardware.firstCharDuration_1);
+                llmmodelTypeToMinMax.maxFirstCharDuration_1 = Math.max(llmmodelTypeToMinMax.maxFirstCharDuration_1, localAIhardware.firstCharDuration_1);
+
                 llmmodelTypeToMinMax.averageProcessingDuration_0 += localAIhardware.processingDuration_0;
                 llmmodelTypeToMinMax.minProcessingDuration_0 = Math.min(llmmodelTypeToMinMax.minProcessingDuration_0, localAIhardware.processingDuration_0);
                 llmmodelTypeToMinMax.maxProcessingDuration_0 = Math.max(llmmodelTypeToMinMax.maxProcessingDuration_0, localAIhardware.processingDuration_0);
 
-                llmmodelTypeToMinMax.averageProcessingDuration_1 += localAIhardware.processingDuration_0;
+                llmmodelTypeToMinMax.averageProcessingDuration_1 += localAIhardware.processingDuration_1;
                 llmmodelTypeToMinMax.minProcessingDuration_1 = Math.min(llmmodelTypeToMinMax.minProcessingDuration_1, localAIhardware.processingDuration_1);
                 llmmodelTypeToMinMax.maxProcessingDuration_1 = Math.max(llmmodelTypeToMinMax.maxProcessingDuration_1, localAIhardware.processingDuration_1);
-
-                llmmodelTypeToMinMax.averageFirstCharDuration_0 += localAIhardware.firstCharDuration_0;
-                llmmodelTypeToMinMax.minFirstCharDuration_0 = Math.min(llmmodelTypeToMinMax.minFirstCharDuration_0, localAIhardware.firstCharDuration_0);
-                llmmodelTypeToMinMax.maxProcessingDuration_0 = Math.max(llmmodelTypeToMinMax.maxProcessingDuration_0, localAIhardware.firstCharDuration_0);
-
-                llmmodelTypeToMinMax.averageFirstCharDuration_1 += localAIhardware.firstCharDuration_1;
-                llmmodelTypeToMinMax.minFirstCharDuration_1 = Math.min(llmmodelTypeToMinMax.minFirstCharDuration_1, localAIhardware.firstCharDuration_1);
-                llmmodelTypeToMinMax.maxProcessingDuration_1 = Math.max(llmmodelTypeToMinMax.maxProcessingDuration_1, localAIhardware.firstCharDuration_1);
-            }
+       }
 
             for(LLMmodelTypeMinMax llmmodelTypeToMinMax: mapLLMmodelTypeToMInMax.values())
               if(llmmodelTypeToMinMax.numData > 1)
@@ -446,29 +446,29 @@ static public void saveToBigQuery(RequestResponseInfo rri, LocalAIhardware local
                 pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.minDatetime = Long.parseLong(line.substring(lastPos, pos)); lastPos = pos + 1;
                 pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.maxDatetime = Long.parseLong(line.substring(lastPos, pos)); lastPos = pos + 1;
 
-                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.averageLoadingDuration_0 = Float.parseFloat(line.substring(lastPos, pos)); lastPos = pos + 1;
-                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.minLoadingDuration_0 = Integer.parseInt(line.substring(lastPos, pos)); lastPos = pos + 1;
-                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.maxLoadingDuration_0 = Integer.parseInt(line.substring(lastPos, pos)); lastPos = pos + 1;
+     pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.averageLoadingDuration_0 = Float.parseFloat(line.substring(lastPos, pos)); lastPos = pos + 1;
+                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.minLoadingDuration_0 = (int)Math.floor(Math.min(Integer.parseInt(line.substring(lastPos, pos)), llmmodelTypeToMinMax.averageLoadingDuration_0)); lastPos = pos + 1;
+                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.maxLoadingDuration_0 = (int)Math.ceil(Math.max(Integer.parseInt(line.substring(lastPos, pos)), llmmodelTypeToMinMax.averageLoadingDuration_0)); lastPos = pos + 1;
 
                 pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.averageLoadingDuration_1 = Float.parseFloat(line.substring(lastPos, pos)); lastPos = pos + 1;
-                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.minLoadingDuration_1 = Integer.parseInt(line.substring(lastPos, pos)); lastPos = pos + 1;
-                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.maxLoadingDuration_1 = Integer.parseInt(line.substring(lastPos, pos)); lastPos = pos + 1;
+                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.minLoadingDuration_1 = (int) Math.floor(Math.min(Integer.parseInt(line.substring(lastPos, pos)), llmmodelTypeToMinMax.averageLoadingDuration_1)); lastPos = pos + 1;
+                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.maxLoadingDuration_1 = (int) Math.ceil(Math.max(Integer.parseInt(line.substring(lastPos, pos)), llmmodelTypeToMinMax.averageLoadingDuration_1)); lastPos = pos + 1;
 
                 pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.averageProcessingDuration_0 = Float.parseFloat(line.substring(lastPos, pos)); lastPos = pos + 1;
-                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.minProcessingDuration_0 = Integer.parseInt(line.substring(lastPos, pos)); lastPos = pos + 1;
-                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.maxProcessingDuration_0 = Integer.parseInt(line.substring(lastPos, pos)); lastPos = pos + 1;
+                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.minProcessingDuration_0 = (int) Math.floor(Math.min(Integer.parseInt(line.substring(lastPos, pos)), llmmodelTypeToMinMax.averageProcessingDuration_0)); lastPos = pos + 1;
+                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.maxProcessingDuration_0 = (int) Math.ceil(Math.max(Integer.parseInt(line.substring(lastPos, pos)), llmmodelTypeToMinMax.averageProcessingDuration_0)); lastPos = pos + 1;
 
                 pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.averageProcessingDuration_1 = Float.parseFloat(line.substring(lastPos, pos)); lastPos = pos + 1;
-                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.minProcessingDuration_1 = Integer.parseInt(line.substring(lastPos, pos)); lastPos = pos + 1;
-                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.maxProcessingDuration_1 = Integer.parseInt(line.substring(lastPos, pos)); lastPos = pos + 1;
+                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.minProcessingDuration_1 = (int) Math.floor(Math.min(Integer.parseInt(line.substring(lastPos, pos)), llmmodelTypeToMinMax.averageProcessingDuration_1)); lastPos = pos + 1;
+                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.maxProcessingDuration_1 = (int) Math.ceil(Math.max(Integer.parseInt(line.substring(lastPos, pos)), llmmodelTypeToMinMax.averageProcessingDuration_1)); lastPos = pos + 1;
 
                 pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.averageFirstCharDuration_0 = Float.parseFloat(line.substring(lastPos, pos)); lastPos = pos + 1;
-                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.minFirstCharDuration_0 = Integer.parseInt(line.substring(lastPos, pos)); lastPos = pos + 1;
-                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.maxFirstCharDuration_0 = Integer.parseInt(line.substring(lastPos, pos)); lastPos = pos + 1;
+                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.minFirstCharDuration_0 = (int) Math.floor(Math.min(Integer.parseInt(line.substring(lastPos, pos)), llmmodelTypeToMinMax.averageFirstCharDuration_0)); lastPos = pos + 1;
+                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.maxFirstCharDuration_0 = (int) Math.ceil(Math.max(Integer.parseInt(line.substring(lastPos, pos)), llmmodelTypeToMinMax.averageFirstCharDuration_0)); lastPos = pos + 1;
 
                 pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.averageFirstCharDuration_1 = Float.parseFloat(line.substring(lastPos, pos)); lastPos = pos + 1;
-                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.minFirstCharDuration_1 = Integer.parseInt(line.substring(lastPos, pos)); lastPos = pos + 1;
-                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.maxFirstCharDuration_1 = Integer.parseInt(line.substring(lastPos, pos)); lastPos = pos + 1;
+                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.minFirstCharDuration_1 = (int) Math.floor(Math.min(Integer.parseInt(line.substring(lastPos, pos)), llmmodelTypeToMinMax.averageFirstCharDuration_1)); lastPos = pos + 1;
+                pos = line.indexOf(",", lastPos); llmmodelTypeToMinMax.maxFirstCharDuration_1 = (int) Math.ceil(Math.max(Integer.parseInt(line.substring(lastPos, pos)), llmmodelTypeToMinMax.averageFirstCharDuration_1)); lastPos = pos + 1;
 
                 existing_mapLLMmodelTypeToMInMax.put(llmmodelTypeToMinMax.key, llmmodelTypeToMinMax);
             }
@@ -508,9 +508,28 @@ static public void saveToBigQuery(RequestResponseInfo rri, LocalAIhardware local
                              + llmmodelTypeToMinMax.averageProcessingDuration_1 * llmmodelTypeToMinMax.numData)
                                 / numData;
                     llmmodelTypeToMinMax2.numData = numData;
+
+                llmmodelTypeToMinMax2.minLoadingDuration_0 = Math.min(llmmodelTypeToMinMax2.minLoadingDuration_0, llmmodelTypeToMinMax.minLoadingDuration_0);
+                llmmodelTypeToMinMax2.maxLoadingDuration_0 = Math.max(llmmodelTypeToMinMax2.maxLoadingDuration_0, llmmodelTypeToMinMax.maxLoadingDuration_0);
+
+                llmmodelTypeToMinMax2.minLoadingDuration_1 = Math.min(llmmodelTypeToMinMax2.minLoadingDuration_1, llmmodelTypeToMinMax.minLoadingDuration_1);
+                llmmodelTypeToMinMax2.maxLoadingDuration_1 = Math.max(llmmodelTypeToMinMax2.maxLoadingDuration_1, llmmodelTypeToMinMax.maxLoadingDuration_1);
+
+                llmmodelTypeToMinMax2.minFirstCharDuration_0 = Math.min(llmmodelTypeToMinMax2.minFirstCharDuration_0, llmmodelTypeToMinMax.minFirstCharDuration_0);
+                llmmodelTypeToMinMax2.maxFirstCharDuration_0 = Math.max(llmmodelTypeToMinMax2.maxFirstCharDuration_0, llmmodelTypeToMinMax.maxFirstCharDuration_0);
+
+                llmmodelTypeToMinMax2.minFirstCharDuration_1 = Math.min(llmmodelTypeToMinMax2.minFirstCharDuration_1, llmmodelTypeToMinMax.minFirstCharDuration_1);
+                llmmodelTypeToMinMax2.maxFirstCharDuration_1 = Math.max(llmmodelTypeToMinMax2.maxFirstCharDuration_1, llmmodelTypeToMinMax.maxFirstCharDuration_1);
+
+                llmmodelTypeToMinMax2.minLoadingDuration_0 = Math.min(llmmodelTypeToMinMax2.minLoadingDuration_0, llmmodelTypeToMinMax.minLoadingDuration_0);
+                llmmodelTypeToMinMax2.maxLoadingDuration_0 = Math.max(llmmodelTypeToMinMax2.maxLoadingDuration_0, llmmodelTypeToMinMax.maxLoadingDuration_0);
+
+                llmmodelTypeToMinMax2.minLoadingDuration_1 = Math.min(llmmodelTypeToMinMax2.minLoadingDuration_1, llmmodelTypeToMinMax.minLoadingDuration_1);
+                llmmodelTypeToMinMax2.maxLoadingDuration_1 = Math.max(llmmodelTypeToMinMax2.maxLoadingDuration_1, llmmodelTypeToMinMax.maxLoadingDuration_1);
+
                 }
             } // for
-            mapLLMmodelTypeToMInMax = existing_mapLLMmodelTypeToMInMax;
+            mapLLMmodelTypeToMInMax = existing_mapLLMmodelTypeToMInMax; //important later
 
             } //blob != null
 
@@ -528,6 +547,7 @@ static public void saveToBigQuery(RequestResponseInfo rri, LocalAIhardware local
 
             GZIPOutputStream gzipOS = new GZIPOutputStream(byteArrayOutputStream);
 
+                            //NOTE: SWITCHED ABOVE USING mapLLMmodelTypeToMInMax = existing_mapLLMmodelTypeToMInMax;
             for(LLMmodelTypeMinMax llmmodelTypeToMinMax: mapLLMmodelTypeToMInMax.values())
                 gzipOS.write((llmmodelTypeToMinMax.numData + ","
                     + llmmodelTypeToMinMax.key.length() + " " + llmmodelTypeToMinMax.key + ","
@@ -535,28 +555,28 @@ static public void saveToBigQuery(RequestResponseInfo rri, LocalAIhardware local
                     + llmmodelTypeToMinMax.maxDatetime + ","
 
                     + llmmodelTypeToMinMax.averageLoadingDuration_0 + ","
-                    + llmmodelTypeToMinMax.minLoadingDuration_0 + ","
-                    + llmmodelTypeToMinMax.maxLoadingDuration_0 + ","
+                    + (int) Math.floor(Math.min(llmmodelTypeToMinMax.minLoadingDuration_0, llmmodelTypeToMinMax.averageLoadingDuration_0)) + ","
+                    + (int) Math.ceil(Math.max(llmmodelTypeToMinMax.maxLoadingDuration_0, llmmodelTypeToMinMax.averageLoadingDuration_0)) + ","
 
                     + llmmodelTypeToMinMax.averageLoadingDuration_1 + ","
-                    + llmmodelTypeToMinMax.minLoadingDuration_1 + ","
-                    + llmmodelTypeToMinMax.maxLoadingDuration_1 + ","
+                    + (int) Math.floor(Math.min(llmmodelTypeToMinMax.minLoadingDuration_1, llmmodelTypeToMinMax.averageLoadingDuration_1)) + ","
+                    + (int) Math.ceil(Math.max(llmmodelTypeToMinMax.maxLoadingDuration_1, llmmodelTypeToMinMax.averageLoadingDuration_1)) + ","
 
                     + llmmodelTypeToMinMax.averageProcessingDuration_0 + ","
-                    + llmmodelTypeToMinMax.minProcessingDuration_0 + ","
-                    + llmmodelTypeToMinMax.maxProcessingDuration_0 + ","
+                    + (int) Math.floor(Math.min(llmmodelTypeToMinMax.minProcessingDuration_0, llmmodelTypeToMinMax.averageProcessingDuration_0)) + ","
+                    + (int) Math.ceil(Math.max(llmmodelTypeToMinMax.maxProcessingDuration_0, llmmodelTypeToMinMax.averageProcessingDuration_0)) + ","
 
                     + llmmodelTypeToMinMax.averageProcessingDuration_1 + ","
-                    + llmmodelTypeToMinMax.minProcessingDuration_1 + ","
-                    + llmmodelTypeToMinMax.maxProcessingDuration_1 + ","
+                    + (int) Math.floor(Math.min(llmmodelTypeToMinMax.minProcessingDuration_1, llmmodelTypeToMinMax.averageProcessingDuration_1)) + ","
+                    + (int) Math.ceil(Math.max(llmmodelTypeToMinMax.maxProcessingDuration_1, llmmodelTypeToMinMax.averageProcessingDuration_1)) + ","
 
                     + llmmodelTypeToMinMax.averageFirstCharDuration_0 + ","
-                    + llmmodelTypeToMinMax.minFirstCharDuration_0 + ","
-                    + llmmodelTypeToMinMax.maxFirstCharDuration_0 + ","
+                    + (int) Math.floor(Math.min(llmmodelTypeToMinMax.minFirstCharDuration_0, llmmodelTypeToMinMax.averageFirstCharDuration_0)) + ","
+                    + (int) Math.ceil(Math.max(llmmodelTypeToMinMax.maxFirstCharDuration_0, llmmodelTypeToMinMax.averageFirstCharDuration_0)) + ","
 
                     + llmmodelTypeToMinMax.averageFirstCharDuration_1 + ","
-                    + llmmodelTypeToMinMax.minFirstCharDuration_1 + ","
-                    + llmmodelTypeToMinMax.maxFirstCharDuration_1 + ","
+                    + (int) Math.floor(Math.min(llmmodelTypeToMinMax.minFirstCharDuration_1, llmmodelTypeToMinMax.averageFirstCharDuration_1)) + ","
+                    + (int) Math.ceil(Math.max(llmmodelTypeToMinMax.maxFirstCharDuration_1, llmmodelTypeToMinMax.averageFirstCharDuration_1)) + ","
 
                     + "\n").getBytes("UTF-8"));
 
