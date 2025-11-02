@@ -37,6 +37,8 @@ var mapModelIDtoObject, setModelIDtoObject
 var mapTypeToObject, setTypeToObject
 var mapAgentBrowserToObject, setAgentBrowserToObject
 
+var filterBySameOS = true
+var filterBySameBrowser = false
 var textAreaProcessing
 
 var userMode = undefined //not set
@@ -309,7 +311,9 @@ async function bestSettingsForThisType(type = lastType_bestSettingsForThisType, 
     const mapKeyToObject = new Map()
     for(let llmmodelTypeToMinMax of set_localAIhardware_dataGrid)
     if((llmmodelTypeToMinMax.type === type || ModelOfMyLLMroot.MODEL_TYPE_ALL === type)
-        && last_agent_device_os.OperatingSystemName === llmmodelTypeToMinMax.agent_device_os.OperatingSystemName)
+        && (!LocalAIhardware.filterBySameOS ||last_agent_device_os.OperatingSystemName === llmmodelTypeToMinMax.agent_device_os.OperatingSystemName)
+        && (!LocalAIhardware.filterBySameBrowser ||last_agent_device_os.AgentName === llmmodelTypeToMinMax.agent_device_os.AgentName)
+    )
     {
 
         const key = llmmodelTypeToMinMax.agent_device_os.AgentName
@@ -395,10 +399,16 @@ async function bestSettingsForThisType(type = lastType_bestSettingsForThisType, 
     }
 
      let sortBest = ""
+
+        sortBest += "<label><input onClick='LocalAIhardware.filterBySameOS=this.checked;window.LocalAIhardware.bestSettingsForThisType()' type='checkbox' "+ (LocalAIhardware.filterBySameOS ? "checked" : "") +">same OS</label>"
+            + " &nbsp;<label><input onClick='LocalAIhardware.filterBySameBrowser=this.checked;window.LocalAIhardware.bestSettingsForThisType()' type='checkbox' "+ (LocalAIhardware.filterBySameBrowser ? "checked" : "") +">same browser</label>"
+            + " &nbsp; &nbsp; "
+
+
      if(mapKeyToObject.size === 0)
-         sortBest = await translate("NO DATA FOR YOUR DEVICE")
+         sortBest += await translate("NO DATA FOR YOUR DEVICE")
        else {
-         sortBest = await translate("Ordenate by")
+         sortBest += await translate("Ordenate by")
          for (let i = -1; i <= 1; i++)
              sortBest += "&nbsp; <label style='vertical-align:sub'><input onClick='LocalAIhardware.minAVERAGEmax=" + i + ";window.LocalAIhardware.bestSettingsForThisType()' type='radio' name='localAIhardware_minAVERAGEmax' " + (LocalAIhardware.minAVERAGEmax === i ? "checked" : "") + ">" + ["min", "avg", "max"][i + 1] + "</label>"
 
@@ -1537,6 +1547,12 @@ static async calculateTimes()
     document.getElementById("firstCharDuration_" + firstOrSecond).innerHTML = "waiting..."
     document.getElementById("processingDuration_" + firstOrSecond).innerHTML = "waiting..."
 
+    //after click can give a better result!!!
+    document.getElementById("navigator_deviceMemory").value = navigator.deviceMemory
+    const result = await navigator.storage.estimate()
+    const memorySizeForOriginPrivateFileSystem = result.quota
+    document.getElementById("navigator_memorydisk").innerHTML = formatBytes(memorySizeForOriginPrivateFileSystem)
+
     textAreaProcessing = document.getElementById("textResponse")
     textAreaProcessing.innerHTML = "processing..."
     textAreaProcessing.style.display = ""
@@ -1646,9 +1662,9 @@ let s = "<table><tr><th rowspan='2' style='width:1px'>" + llm_selected.icon() + 
     s += "<center><table>"
        + "<tr>"
 
-       + "<td>Memory</td><td> <input type='number' disabled value='"+navigator.deviceMemory+"' style='width:40px' title='aproximated to avoid device fingerprinting'> GBytes</td></tr>"
+       + "<td>Memory</td><td> <input id='navigator_deviceMemory' type='number' disabled value='"+navigator.deviceMemory+"' style='width:40px' title='aproximated to avoid device fingerprinting'> GBytes</td></tr>"
        + "<tr><td>manual</td><td><input id='input_localAIhardware_manualMemorySize' type='number' style='width:40px' value='"+manual_memoryzSize+"' "+ (manual_memoryzSize === 0 ? "" : "disabled") +" > GBytes</td></tr>"
-       + "<tr><td>Disk</td><td>"+formatBytes(memorySizeForOriginPrivateFileSystem)+"</td></tr>"
+       + "<tr><td>Disk</td><td id='navigator_memorydisk'>"+formatBytes(memorySizeForOriginPrivateFileSystem)+"</td></tr>"
       + "<tr><td>Application</td><td><input id='input_localAIhardware_application' type='text' disabled value='" + (BaseLineFeatures.calculateOnUniqueTab ? "none" : document.location.hostname) + "' style='width:100px'></td></tr>"
 
        + "<td colspan=4>Browser Baseline Features<br><textarea style='width:300px;height:100px' disabled>" + last_baselineFeaturesAvailableToText +"</textarea></td></tr>"
@@ -3540,6 +3556,8 @@ const LocalAIhardware = {
     sortBest,
     ModelOfMyLLMroot,
     default_call_bestSettingsForThisType,
+    filterBySameOS,
+    filterBySameBrowser,
 }
 
 window.BaseLineFeatures = BaseLineFeatures

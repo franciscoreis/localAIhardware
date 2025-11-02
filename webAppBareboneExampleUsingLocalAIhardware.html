@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <script>
+
+      async function initialize()
+      {
+          const {
+                    default: LocalAIhardware,
+                } = await import(
+                    "https://localAIhardware.com/localAIhardware.mjs"
+                )
+        window.LocalAIhardware = LocalAIhardware
+      }
+
+      function call_localAIhardware_SORT_BEST(type, llmID, modelID, uuid)
+      {
+
+        alert("WEB APP USING LOCAL AI HARDARE INFO"
+                + "\nShow user or act on the web app user interface"
+                + "\ntype=" + type
+                + "\nllmID=" + llmID
+                + "\nmodelID=" + modelID
+                + "\nuuid=" + uuid
+            )
+
+      }
+
+      function showInfo(type)
+      {
+                const elemID = "elem_id_localAIhardware_SORT_BEST"
+                const popover = document.getElementById("my-popover")
+                popover.innerHTML = "<table style='width:100%'><td style='width:1px'><img src='https://localaihardware.com/localaihardware_logo_507X168.jpg' style='height:40px'></td>"
+                        + "<td style='text-align:center'>AI <b style='color:green'>"+ type +"</b></td>"
+                        + "<td onClick='document.getElementById(\"my-popover\").hidePopover()' style='cursor:pointer;width:1px;color:red'><b>&nbsp;X&nbsp;</b></td></tr></table><br><br><div id='"+elemID+"' style='display:inline-block'></div>"
+                LocalAIhardware.sortBest(type, elemID, "only_sortBest", true, "window.call_localAIhardware_SORT_BEST")
+                popover.showPopover()
+      }
+
+    </script>
+
+
+</head>
+<body onload="initialize()">
+<center>
+<h3>Web App Barebone Example Using Local AI Hardware info.</h3>
+<br>
+<br>
+<select onchange="showInfo(this.value);this.value='choose'">
+  <option value="choose">select best Local AI</option>
+  <option value="summary">AI summary</option>
+  <option value="translator">AI translator</option>
+</select>
+<br>
+<br>
+<br>
+Select type of AI and then click on the best AI engine/model.
+<br>&nbsp;
+
+<div popover id="my-popover"></div>
+</center>
+</body>
+</html>
