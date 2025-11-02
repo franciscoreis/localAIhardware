@@ -321,6 +321,7 @@ async function bestSettingsForThisType(type = lastType_bestSettingsForThisType, 
         const key = llmmodelTypeToMinMax.agent_device_os.AgentName
             + " " + llmmodelTypeToMinMax.llmID
             + " " + llmmodelTypeToMinMax.modelID
+            + " " + llmmodelTypeToMinMax.agent_device_os.OperatingSystemName
 
         const object = mapKeyToObject.get(key)
         if(!object)
@@ -785,7 +786,7 @@ function showAll_viewDataGrid()
 async function downloadDataGrid()
 {
   const url = "https://storage.googleapis.com/localaihardware/"
-      + (false && location.hostname === "localhost"
+      + (location.hostname === "localhost"
           ? "local_" //for local debugging
           : "")
        + "localaihardware.csv"
