@@ -19,6 +19,8 @@ var firstCharDuration = []
 
 var last_baselineFeaturesAvailableToText
 var last_agent_device_os, last_agent_device_os_STRING
+var last_webgpu_static_info
+var last_webgpu_dynamic_info
 
 var lastType_bestSettingsForThisType
 var lastElemID_bestSettingsForThisType = "localAIhardware_mainTable"
@@ -202,6 +204,12 @@ async function update_localAIhardware_mainTable(numView)
 
 }
 //-------------------------------------
+function titleDropDrown(title, body, opened)
+{
+    return "<table border=1 style='width:260px;max-width:98%'><tr onClick='open=this.children[1].innerHTML==\"+\";this.nextSibling.style.display= open ? \"\" : \"none\";this.children[1].innerHTML= open?\"-\" : \"+\"'><th>" + title + "</th><th style='cursor:pointer;width:1px'>" + (opened ? "-" : "+") + "</th></tr>"
+        + "<tr style='" + (opened ? "":"display:none") + "'><td colspan=2>" + body + "</td></tr></table>"
+}
+//-------------------------------------
 async function setUserMode(userMode_param, elemIDforInnerHTML)
 {
     if(userMode !== undefined || userMode_param === undefined)
@@ -264,10 +272,13 @@ translations.set(englishString, translated)
 return translated
 }
 //-----------------------------------------------------------------
-async function sortBest(type, elemIDforInnerHTML, options, userMode_param, callWhenSelect)
+async function sortBest(type, elemIDforInnerHTML, options, userMode_param, callWhenSelect, showFeaturesInThisElemID)
 {
     await setUserMode(userMode_param, elemIDforInnerHTML)
     bestSettingsForThisType(type, elemIDforInnerHTML, options, callWhenSelect)
+
+    if(showFeaturesInThisElemID)
+        LocalAIhardware.MyLLMroot.calculateMenu_llm_model(undefined, undefined, type, undefined, showFeaturesInThisElemID)
 }
 //-----------------------------------------------------------------
 async function bestSettingsForThisType(type = lastType_bestSettingsForThisType, elemIDforInnerHTML = lastElemID_bestSettingsForThisType
@@ -296,6 +307,11 @@ async function bestSettingsForThisType(type = lastType_bestSettingsForThisType, 
 
     if(!last_agent_device_os)
         return BaseLineFeatures.get_agent_device_os(true, function(){bestSettingsForThisType(type, elemIDforInnerHTML, options)})
+    if(!last_webgpu_static_info)
+        return BaseLineFeatures.get_webgpu_static_info(function(){bestSettingsForThisType(type, elemIDforInnerHTML, options)})
+    if(!last_webgpu_dynamic_info)
+        return BaseLineFeatures.get_webgpu_dynamic_info(function(){bestSettingsForThisType(type, elemIDforInnerHTML, options)})
+
 
     s += "<br><b>" + last_agent_device_os_STRING + "</b>"
 
@@ -352,7 +368,7 @@ async function bestSettingsForThisType(type = lastType_bestSettingsForThisType, 
                                       , maxProcessingDuration_0: llmmodelTypeToMinMax.maxProcessingDuration_0
                                       , maxLoadingDuration_1: llmmodelTypeToMinMax.maxLoadingDuration_1
                                       , maxFirstCharDuration_1: llmmodelTypeToMinMax.maxFirstCharDuration_1
-                                      , maxProcessingDuration_1: llmmodelTypeToMinMax.averageProcessingDuration_1
+                                      , maxProcessingDuration_1: llmmodelTypeToMinMax.maxProcessingDuration_1
 
 
                     })
@@ -381,12 +397,12 @@ async function bestSettingsForThisType(type = lastType_bestSettingsForThisType, 
           object.minFirstCharDuration_1 = Math.min(object.minFirstCharDuration_1, llmmodelTypeToMinMax.minFirstCharDuration_1)
           object.minProcessingDuration_1 = Math.min(object.minProcessingDuration_1, llmmodelTypeToMinMax.maxProcessingDuration_1)
 
-          object.maxLoadingDuration_0 = Math.min(object.maxLoadingDuration_0, llmmodelTypeToMinMax.maxLoadingDuration_0)
-          object.maxFirstCharDuration_0 = Math.min(object.maxFirstCharDuration_0, llmmodelTypeToMinMax.maxFirstCharDuration_0)
-          object.maxProcessingDuration_0 = Math.min(object.maxProcessingDuration_0, llmmodelTypeToMinMax.maxProcessingDuration_0)
-          object.maxLoadingDuration_1 = Math.min(object.maxLoadingDuration_1, llmmodelTypeToMinMax.maxLoadingDuration_1)
-          object.maxFirstCharDuration_1 = Math.min(object.maxFirstCharDuration_1, llmmodelTypeToMinMax.maxFirstCharDuration_1)
-          object.maxProcessingDuration_1 = Math.min(object.maxProcessingDuration_1, llmmodelTypeToMinMax.minProcessingDuration_1)
+          object.maxLoadingDuration_0 = Math.max(object.maxLoadingDuration_0, llmmodelTypeToMinMax.maxLoadingDuration_0)
+          object.maxFirstCharDuration_0 = Math.max(object.maxFirstCharDuration_0, llmmodelTypeToMinMax.maxFirstCharDuration_0)
+          object.maxProcessingDuration_0 = Math.max(object.maxProcessingDuration_0, llmmodelTypeToMinMax.maxProcessingDuration_0)
+          object.maxLoadingDuration_1 = Math.max(object.maxLoadingDuration_1, llmmodelTypeToMinMax.maxLoadingDuration_1)
+          object.maxFirstCharDuration_1 = Math.max(object.maxFirstCharDuration_1, llmmodelTypeToMinMax.maxFirstCharDuration_1)
+          object.maxProcessingDuration_1 = Math.max(object.maxProcessingDuration_1, llmmodelTypeToMinMax.maxProcessingDuration_1)
 
         }
 
@@ -1631,8 +1647,9 @@ static calculate_llmID_modelName(llm_uniqueID, modelOfMyLLM_name)
     }
 }
 //----------------------------------------
-static async calculateMenu_llm_model(llm_uniqueID, modelOfMyLLM_id, type = ModelOfMyLLMroot.selectedModelType, justReturnString)
+static async calculateMenu_llm_model(llm_uniqueID, modelOfMyLLM_id, type = ModelOfMyLLMroot.selectedModelType, justReturnString, placeInThisElemID)
 {
+
 
 if(type)
     ModelOfMyLLMroot.selectedModelType = type
@@ -1642,7 +1659,7 @@ else
 if(type === ModelOfMyLLMroot.MODEL_TYPE_ALL)
     return alert("choose a function (chat, summary, ...)")
 
-if(BaseLineFeatures.calculateOnUniqueTab && !justReturnString)
+if(BaseLineFeatures.calculateOnUniqueTab && !justReturnString && !placeInThisElemID)
   return window.open((document.location.hostname === "localhost"
             ?  document.location.origin + "/localAIhardware/index.html"
             : "https://localaihardware.com")
@@ -1659,15 +1676,22 @@ MyLLMroot.activeLLM?.releaseMemory()
 MyLLMroot.activeLLM = undefined
 
 llm_selected = MyLLMroot.mapIDtoMyLLMs.get(llm_uniqueID)
-model_selected = llm_selected.models.get(modelOfMyLLM_id)
+model_selected = llm_selected?.models.get(modelOfMyLLM_id)
 
-let s = "<table><tr><th rowspan='2' style='width:1px'>" + llm_selected.icon() + "</th><th style='text-align:left'>"+ llm_selected.name +"</th><th>&nbsp;+&nbsp;</th><th style='text-align:right'>" + model_selected.name + "</th><th rowspan='2' style='width:1px'>" + model_selected.icon("30px") + "</th></tr>"
+let s = ""
+
+    if(!placeInThisElemID)
+      s += "<table><tr><th rowspan='2' style='width:1px'>" + llm_selected.icon() + "</th><th style='text-align:left'>"+ llm_selected.name +"</th><th>&nbsp;+&nbsp;</th><th style='text-align:right'>" + model_selected.name + "</th><th rowspan='2' style='width:1px'>" + model_selected.icon("30px") + "</th></tr>"
                 + "<tr><td colspan='3' style='color:green'>operation = <b>" + ModelOfMyLLMroot.selectedModelType + "</b></td></tr>"
                 + "</table>"
 
     last_baselineFeaturesAvailableToText = baselineFeaturesAvailableToText()
     if(!last_agent_device_os)
         BaseLineFeatures.get_agent_device_os()
+    if(!last_webgpu_static_info)
+         BaseLineFeatures.get_webgpu_static_info()
+    if(!last_webgpu_dynamic_info)
+         BaseLineFeatures.get_webgpu_dynamic_info()
 
     s += "<center><table>"
        + "<tr>"
@@ -1677,51 +1701,31 @@ let s = "<table><tr><th rowspan='2' style='width:1px'>" + llm_selected.icon() + 
        + "<tr><td>Disk</td><td id='navigator_memorydisk'>"+formatBytes(memorySizeForOriginPrivateFileSystem)+"</td></tr>"
       + "<tr><td>Application</td><td><input id='input_localAIhardware_application' type='text' disabled value='" + (BaseLineFeatures.calculateOnUniqueTab ? "none" : document.location.hostname) + "' style='width:100px'></td></tr>"
 
-       + "<td colspan=4>Browser Baseline Features<br><textarea style='width:300px;height:100px' disabled>" + last_baselineFeaturesAvailableToText +"</textarea></td></tr>"
-       + "<tr><td colspan=4>Agent + Device + Operating System<br><textarea id='textarea_agent_device_os' style='width:300px;height:100px' disabled>" + last_agent_device_os_STRING +"</textarea></td></tr>"
-       + "<tr><th>timing</th><th>first</th><th>second</th><th>&nbsp;</th></tr>"
-       + "<tr><td>Loading</td><td id='loadingDuration_0' style='text-align:right'>"+ (firstOrSecond === 0 ? "no data" : loadingDuration[0].toFixed(1) + " ms") +"</td><td id='loadingDuration_1' style='text-align:right'>no data</td><td>&nbsp;</td></tr>"
-       + "<tr><td>First char received</td><td id='firstCharDuration_0' style='text-align:right'>"+ (firstOrSecond === 0 ? "no data" : firstCharDuration[0].toFixed(1) + " ms") +"</td><td id='firstCharDuration_1' style='text-align:right'>no data</td><td>&nbsp;</td></tr>"
-       + "<tr><td>Last char received</td><td id='processingDuration_0' style='text-align:right'>"+ (firstOrSecond === 0 ? "no data" : processingDuration[0].toFixed(1) + " ms") +"</td><td id='processingDuration_1' style='text-align:right'>no data</td><td>&nbsp;</td></tr>"
-       + "</table>"
-       + "<br>"
-       + "<button id='button_calculate_first_second' onClick='MyLLMroot.calculateTimes(\"" + llm_uniqueID + "\",\"" + modelOfMyLLM_id + "\")' style='margin-bottom:6px;color:white;background-color:green'>" + TLtranslateFromTo(firstOrSecond == 0 ? "calculate first" : "calculate second") +"</button>"
-       + " &nbsp; <button id='button_post_data_to_server' onCLick='BaseLineFeatures.postDataToServer()' style='margin-bottom:6px'>" + TLtranslateFromTo("post local AI Hardware data") +"</button>"
-       + "<br><textarea id='textResponse' disabled style='display:none;width:350px;height:100px'></textarea>"
-       + "</center>"
+       + "<td colspan=4>" + titleDropDrown("Browser Baseline Features","<textarea style='width:250px;min-height:60px;field-sizing:content' disabled>" + last_baselineFeaturesAvailableToText +"</textarea>") + "</td></tr>"
+       + "<tr><td colspan=4>" + titleDropDrown("Agent + Device + OS", "<textarea id='textarea_agent_device_os' style='width:250px;min-height:60px;field-sizing:content' disabled>" + last_agent_device_os_STRING +"</textarea>") + "</td></tr>"
+       + "<tr><td colspan=4>" + titleDropDrown("WebGPU static info", "<textarea id='webgpu_static_info' style='width:250px;min-height:60px;field-sizing:content' disabled>" + last_webgpu_static_info +"</textarea>") + "</td></tr>"
+       + "<tr><td colspan=4>" + titleDropDrown("WebGPU dynamic info", "<textarea id='webgpu_dynamic_info' style='width:250px;min-height:60px;field-sizing:content' disabled>" + last_webgpu_dynamic_info +"</textarea>") + "</td></tr>"
+
+       if(placeInThisElemID)
+           s += "</table></center>"
+       else
+           s +=  "<tr><th>timing</th><th>first</th><th>second</th><th>&nbsp;</th></tr>"
+           + "<tr><td>Loading</td><td id='loadingDuration_0' style='text-align:right'>"+ (firstOrSecond === 0 ? "no data" : loadingDuration[0].toFixed(1) + " ms") +"</td><td id='loadingDuration_1' style='text-align:right'>no data</td><td>&nbsp;</td></tr>"
+           + "<tr><td>First char received</td><td id='firstCharDuration_0' style='text-align:right'>"+ (firstOrSecond === 0 ? "no data" : firstCharDuration[0].toFixed(1) + " ms") +"</td><td id='firstCharDuration_1' style='text-align:right'>no data</td><td>&nbsp;</td></tr>"
+           + "<tr><td>Last char received</td><td id='processingDuration_0' style='text-align:right'>"+ (firstOrSecond === 0 ? "no data" : processingDuration[0].toFixed(1) + " ms") +"</td><td id='processingDuration_1' style='text-align:right'>no data</td><td>&nbsp;</td></tr>"
+           + "</table>"
+           + "<br>"
+           + "<button id='button_calculate_first_second' onClick='MyLLMroot.calculateTimes(\"" + llm_uniqueID + "\",\"" + modelOfMyLLM_id + "\")' style='margin-bottom:6px;color:white;background-color:green'>" + TLtranslateFromTo(firstOrSecond == 0 ? "calculate first" : "calculate second") +"</button>"
+           + " &nbsp; <button id='button_post_data_to_server' onCLick='BaseLineFeatures.postDataToServer()' style='margin-bottom:6px'>" + TLtranslateFromTo("post local AI Hardware data") +"</button>"
+           + "<br><textarea id='textResponse' disabled style='display:none;width:350px;height:100px'></textarea>"
+           + "</center>"
+
+if(placeInThisElemID)
+  return document.getElementById(placeInThisElemID).innerHTML = s
 
 if(justReturnString)
     return s
 
-showPopoverWithContent(s)
-
-}
-//----------------------------------------
-static async calculateMenu_llm_model_OLD(llm_uniqueID, modelOfMyLLM_id)
-{
-
-const result = await navigator.storage.estimate()
-const memorySizeForOriginPrivateFileSystem = result.quota
-
-const llm = MyLLMroot.mapIDtoMyLLMs.get(llm_uniqueID)
-const model = llm.models.get(modelOfMyLLM_id)
-
-let s = "<table style='width:100%'><tr><th style='width:1px'>" + llm.icon() + "</th><th style='text-align:left'>"+ llm.name +"</th><th>&nbsp;+&nbsp;</th><th style='text-align:right'>" + model.name + "</th><th style='width:1px'>" + model.icon("30px") + "</th></tr></table>"
-
-    s += "<center><table>"
-       + "<tr><td>Memory</td><td> <input type='number' disabled value='"+navigator.deviceMemory+"' style='width:40px' title='aproximated to avoid device fingerprinting'> GBytes</td></tr>"
-       + "<tr><td>manual</td><td><input type='number' style='width:40px'> GBytes</td></tr>"
-       + "<tr><td>Disk</td><td>"+formatBytes(memorySizeForOriginPrivateFileSystem)+"</td></tr>"
-       + "<tr><td>Loading first time</td><td>no data</td></tr>"
-       + "<tr><td>Loading second time</td><td>no data</td></tr>"
-       + "<tr><td>First char received</td><td>no data</td></tr>"
-       + "<tr><td>Last char received</td><td>no data</td></tr>"
-
-       + "</table>"
-       + "<br>"
-       + "<button onClick='calculateTimes(\"" + llm_uniqueID + "\",\"" + modelOfMyLLM_id + "\")' style='margin-bottom:6px'>" + TLtranslateFromTo("calculate") +"</button>"
-       + " &nbsp; <button style='margin-bottom:6px'>" + TLtranslateFromTo("post local AI Hardware data") +"</button>"
-       + "</center>"
 showPopoverWithContent(s)
 
 }
@@ -3468,6 +3472,163 @@ fetch(url, {
 
 }
 //---------------------------------
+    //GEMINI PRO assisted
+static async get_webgpu_static_info(callAtEnd)
+{
+
+const adapter = await navigator.gpu.requestAdapter({
+      powerPreference: "high-performance",
+    });
+
+    if (!adapter) {
+      console.error("No WebGPU adapter found.");
+      return;
+    }
+
+    // 2. Get adapter info (if available)
+    // adapter.info is a newer property and might not be in all browsers
+    // It requires the 'webgpu-adapter-info' permission
+    let adapterInfo = { vendor: "unknown", architecture: "unknown" };
+    if (adapter.info) {
+        adapterInfo = adapter.info;
+    } else if (typeof adapter.requestAdapterInfo === 'function') {
+        // Fallback for older spec
+        adapterInfo = await adapter.requestAdapterInfo();
+    }
+
+    let s = ""
+
+    // 3. Get adapter features
+    // This tells you what optional features the GPU supports
+    console.log("Supported Features:");
+    adapter.features.forEach((feature) => {
+      s += " " + feature + " "
+    })
+
+    // 4. Get adapter limits
+    // This tells you the hardware's maximums
+    console.log("Hardware Limits:");
+    const limits = adapter.limits;
+    s += "\nMax compute workgroup size (x): " + limits.maxComputeWorkgroupSizeX
+    s += "\nMax compute invocations per workgroup: " + limits.maxComputeInvocationsPerWorkgroup
+    s += "\nMax storage buffer binding size: " + limits.maxStorageBufferBindingSize
+
+    last_webgpu_static_info = s
+    document.getElementById("webgpu_static_info").innerHTML = last_webgpu_static_info
+
+
+    if(callAtEnd)
+      callAtEnd()
+
+}
+//---------------------------------
+    //GEMINI PRO assisted
+static async get_webgpu_dynamic_info(callAtEnd)
+{
+
+if (!navigator.gpu) {
+    console.error("WebGPU not supported.");
+    return;
+  }
+
+  const adapter = await navigator.gpu.requestAdapter();
+  if (!adapter) {
+    console.error("No WebGPU adapter found.");
+    return;
+  }
+  const device = await adapter.requestDevice();
+
+  // --- 1. Setup: Create shader and buffers (simplified) ---
+
+  // A simple compute shader (WGSL) that does some work
+  const shaderCode = `
+    @group(0) @binding(0) var<storage, read_write> data: array<f32>;
+
+    @compute @workgroup_size(64)
+    fn main(@builtin(global_invocation_id) id: vec3<u32>) {
+      let i = id.x;
+      // Perform some arbitrary calculations
+      data[i] = data[i] * f32(i) / 255.0;
+    }
+  `;
+
+  console.log("Starting GPU benchmark...");
+  const startTime = performance.now();
+
+
+  for(let i = 0; i < 10; i++) //includes warmup and average
+  {
+
+  const shaderModule = device.createShaderModule({ code: shaderCode });
+
+  // Create a buffer to hold data
+  const size = 1024 * 1024; // 1 million floats
+  const gpuBuffer = device.createBuffer({
+    size: size * Float32Array.BYTES_PER_ELEMENT,
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
+  });
+
+  // Create pipeline and bind group
+  const pipeline = device.createComputePipeline({
+    layout: 'auto',
+    compute: { module: shaderModule, entryPoint: "main" },
+  });
+
+  const bindGroup = device.createBindGroup({
+    layout: pipeline.getBindGroupLayout(0),
+    entries: [{ binding: 0, resource: { buffer: gpuBuffer } }],
+  });
+
+  // --- 2. The Benchmark: Time the GPU work ---
+
+  // Create command encoder
+  const commandEncoder = device.createCommandEncoder();
+
+  // Begin compute pass
+  const passEncoder = commandEncoder.beginComputePass();
+  passEncoder.setPipeline(pipeline);
+  passEncoder.setBindGroup(0, bindGroup);
+  passEncoder.dispatchWorkgroups(Math.ceil(size / 64)); // Dispatch work
+  passEncoder.end();
+
+  // Submit the commands to the GPU
+  const commandBuffer = commandEncoder.finish();
+  device.queue.submit([commandBuffer]);
+
+  // IMPORTANT: Wait for the GPU to actually finish
+  // onSubmittedWorkDone() resolves when the work is *sent*, not *finished*.
+  // We use it here for a simple "end" signal for the benchmark.
+  // For more accuracy, you'd copy the result to a staging buffer
+  // and wait for the mapping, or use timestamp queries.
+  await device.queue.onSubmittedWorkDone();
+
+  gpuBuffer.destroy();
+
+  }
+
+  const endTime = performance.now();
+  const duration = (endTime - startTime).toFixed(3);
+
+  // Don't forget to clean up resources
+
+  let s = "GPU_benchmark_ms=" + duration
+
+
+  const results = await runWebGPUBenchmark()
+
+
+  last_webgpu_dynamic_info = s
+        + " computeFP32_GFLOPs=" + results.metrics.computeFP32_GFLOPs
+        + " memBandwidth_GBps=" + results.metrics.memBandwidth_GBps
+
+  document.getElementById("webgpu_dynamic_info").innerHTML = last_webgpu_dynamic_info
+
+
+    if(callAtEnd)
+      callAtEnd()
+
+}
+//---------------------------------
 static async get_agent_device_os(first = true, callAtEnd)
 {
      const url = location.protocol + "//" + (location.host.indexOf("localhost:") !== -1
@@ -3548,6 +3709,340 @@ static async get_agent_device_os(first = true, callAtEnd)
 //---------------------------------
 } //class BaseLineFeatures
 //---------------------------------
+
+// ChatGPT assisted
+async function ensureWebGPU() {
+  if (!('gpu' in navigator)) {
+    throw new Error('WebGPU not supported (navigator.gpu missing). Try Chrome/Edge/Arc/Opera with WebGPU enabled.');
+  }
+  const adapter = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' })
+               || await navigator.gpu.requestAdapter();
+  if (!adapter) throw new Error('No GPU adapter found.');
+  // Try to get (non-fingerprinting) adapter info when available & permitted
+  let adapterInfo = null;
+  if (adapter.requestAdapterInfo) {
+    try { adapterInfo = await adapter.requestAdapterInfo(); } catch (_) {}
+  }
+
+  const wantFeatures = [];
+  if (adapter.features.has('timestamp-query')) wantFeatures.push('timestamp-query');
+  if (adapter.features.has('shader-f16')) wantFeatures.push('shader-f16'); // not used here but good to note
+  const device = await adapter.requestDevice({
+    requiredFeatures: wantFeatures
+  });
+
+  return { adapter, adapterInfo, device };
+}
+
+async function gpuIdle(device) {
+  // Wait for all queued work to complete
+  await device.queue.onSubmittedWorkDone();
+}
+
+// ———————————————————————————————————————————————————————————————
+// Precise/rough timing helpers
+// ———————————————————————————————————————————————————————————————
+function supportsTimestamp(device) {
+  return device.features.has('timestamp-query');
+}
+
+function createTimestampQuery(device) {
+  if (!supportsTimestamp(device)) return null;
+  return device.createQuerySet({ type: 'timestamp', count: 2 });
+}
+
+async function measureWithGpuTimestamps(device, encoder, doEncode) {
+  // Returns time in milliseconds measured on-GPU when supported; null otherwise
+  if (!supportsTimestamp(device)) return null;
+
+  const querySet = createTimestampQuery(device);
+  const resolveBuf = device.createBuffer({
+    size: 16, // 2 * 8 bytes (u64)
+    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+  });
+
+  const pass = encoder.beginComputePass();
+  pass.writeTimestamp?.(querySet, 0);
+  doEncode(pass);
+  pass.writeTimestamp?.(querySet, 1);
+  pass.end();
+
+  encoder.resolveQuerySet(querySet, 0, 2, resolveBuf, 0);
+  device.queue.submit([encoder.finish()]);
+  await resolveBuf.mapAsync(GPUMapMode.READ);
+  const arr = new BigUint64Array(resolveBuf.getMappedRange());
+  const t0 = arr[0];
+  const t1 = arr[1];
+  resolveBuf.unmap();
+
+  // Convert ticks→ms. Chrome exposes queue.getTimestampPeriod() (ns per tick) on some builds;
+  // fall back to assuming 1 ns/tick if not exposed (still gives relative numbers).
+  const nsPerTick = typeof device.queue.getTimestampPeriod === 'function'
+    ? device.queue.getTimestampPeriod()
+    : 1; // conservative fallback
+
+  const ms = Number(t1 - t0) * (nsPerTick / 1e6);
+  return ms;
+}
+
+async function measureWithWallClock(device, encodeWork) {
+  const t0 = performance.now();
+  const encoder = device.createCommandEncoder();
+  encodeWork(encoder);
+  device.queue.submit([encoder.finish()]);
+  await gpuIdle(device);
+  const t1 = performance.now();
+  return t1 - t0; // ms
+}
+
+// ———————————————————————————————————————————————————————————————
+// Compute GFLOP/s benchmark
+// Kernel does many FMAs per thread to be ALU bound.
+// Each loop iteration ≈ 2 FLOPs (mul+add). We unroll to amplify work.
+// ———————————————————————————————————————————————————————————————
+async function measureFlops(device, opts = {}) {
+  const limits = device.limits;
+  const workgroupSize = Math.min(256, limits.maxComputeInvocationsPerWorkgroup);
+  const maxGroups = Math.min(8192, limits.maxComputeWorkgroupsPerDimension);
+  const workgroups = Math.min(opts.workgroups ?? 4096, maxGroups);
+  const iters = opts.iters ?? 4096; // per-thread loop
+
+  // WGSL compute: pure math, minimal memory traffic
+  const shaderCode = `
+    @group(0) @binding(0) var<storage, read_write> outBuf: array<f32>;
+    @compute @workgroup_size(${workgroupSize})
+    fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
+      let idx = gid.x;
+      var x = f32(idx) * 0.000001 + 1.0;
+      var a = 1.000001;
+      var b = 0.999999;
+      // Do a bunch of FMAs to stress ALU
+      // Manually unroll chunks of 8 for better ILP
+      for (var i = 0u; i < ${iters}u; i = i + 8u) {
+        x = x * a + b;
+        x = x * a + b;
+        x = x * a + b;
+        x = x * a + b;
+        x = x * a + b;
+        x = x * a + b;
+        x = x * a + b;
+        x = x * a + b;
+      }
+      outBuf[idx] = x;
+    }`;
+
+  const module = device.createShaderModule({ code: shaderCode });
+  const pipeline = await device.createComputePipelineAsync({
+    layout: 'auto',
+    compute: { module, entryPoint: 'main' }
+  });
+
+  const totalInvocations = workgroupSize * workgroups;
+  // Output buffer to keep the compiler from dead-code eliminating the math
+  const outBuf = device.createBuffer({
+    size: totalInvocations * 4,
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+  });
+
+  const bindGroup = device.createBindGroup({
+    layout: pipeline.getBindGroupLayout(0),
+    entries: [{ binding: 0, resource: { buffer: outBuf } }],
+  });
+
+  const encodeDispatch = (pass) => {
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, bindGroup);
+    pass.dispatchWorkgroups(workgroups);
+  };
+
+  const preciseMs = null /*await (async () => {
+    if (!supportsTimestamp(device)) return null;
+    const encoder = device.createCommandEncoder();
+    const ms = await measureWithGpuTimestamps(device, encoder, (pass) => encodeDispatch(pass));
+    if (ms != null) return ms;
+    return null;
+  })(); */
+
+
+  let elapsedMs = preciseMs;
+  if (elapsedMs == null) {
+    // Rough timing fallback
+    elapsedMs = await measureWithWallClock(device, (encoder) => {
+      const pass = encoder.beginComputePass();
+      encodeDispatch(pass);
+      pass.end();
+    });
+  }
+
+  // FLOPs = (invocations) * (iters * 8 unrolled / 1 iteration) * (2 FLOPs per FMA step)
+  const loopIters = iters;         // we already unrolled by 8 inside the loop body
+  const flopsPerIter = 2 * 8;      // 8x (mul+add) per loop iteration
+  const totalFLOPs = BigInt(totalInvocations) * BigInt(loopIters) * BigInt(flopsPerIter);
+  const gflops = Number(totalFLOPs) / (elapsedMs / 1000) / 1e9;
+
+  // Read back one value to keep JIT honest (optional)
+  // (Omitted: copying to mapped buffer — cost would pollute timing.)
+
+  return {
+    gflops,
+    elapsedMs,
+    method: preciseMs != null ? 'gpu-timestamps' : 'wall-clock',
+    params: { workgroupSize, workgroups, iters }
+  };
+}
+
+// ———————————————————————————————————————————————————————————————
+// Memory bandwidth benchmark (GB/s)
+// Streams two input buffers and writes one output buffer.
+// Bandwidth ~= bytes_read + bytes_written divided by time.
+// ———————————————————————————————————————————————————————————————
+async function measureBandwidth(device, opts = {}) {
+  const limits = device.limits;
+  const maxStorage = limits.maxStorageBufferBindingSize;
+  // Use a large but safe buffer size; cap at 64 MiB or 80% of max binding size
+  const targetSize = 64 * 1024 * 1024;
+  const size = Math.min(targetSize, Math.floor(maxStorage * 0.8));
+  const numElems = Math.floor(size / 4);
+
+  const shader = `
+    struct Buf { data: array<f32> };
+    @group(0) @binding(0) var<storage, read>  A: Buf;
+    @group(0) @binding(1) var<storage, read>  B: Buf;
+    @group(0) @binding(2) var<storage, read_write> C: Buf;
+
+    @compute @workgroup_size(256)
+    fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
+      let i = gid.x;
+      if (i >= ${numElems}u) { return; }
+      // Simple axpy: C = 1.0001 * A + B  (streaming memory)
+      C.data[i] = A.data[i] * 1.0001 + B.data[i];
+    }`;
+
+  const module = device.createShaderModule({ code: shader });
+  const pipeline = await device.createComputePipelineAsync({
+    layout: 'auto',
+    compute: { module, entryPoint: 'main' }
+  });
+
+  // Buffers
+  const A = device.createBuffer({
+    size, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+  });
+  const B = device.createBuffer({
+    size, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+  });
+  const C = device.createBuffer({
+    size, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+  });
+
+  // Initialize A/B with some data (don’t stall the GPU too much)
+  const tmp = new Float32Array(1024);
+  for (let i = 0; i < tmp.length; i++) tmp[i] = i;
+  device.queue.writeBuffer(A, 0, tmp);
+  device.queue.writeBuffer(B, 0, tmp);
+
+  const bindGroup = device.createBindGroup({
+    layout: pipeline.getBindGroupLayout(0),
+    entries: [
+      { binding: 0, resource: { buffer: A } },
+      { binding: 1, resource: { buffer: B } },
+      { binding: 2, resource: { buffer: C } },
+    ],
+  });
+
+  const workgroupSize = 256;
+  const workgroups = Math.ceil(numElems / workgroupSize);
+
+  const encode = (pass) => {
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, bindGroup);
+    pass.dispatchWorkgroups(workgroups);
+  };
+
+  const preciseMs = null /* = await (async () => {
+    if (!supportsTimestamp(device)) return null;
+    const encoder = device.createCommandEncoder();
+    const ms = await measureWithGpuTimestamps(device, encoder, (pass) => encode(pass));
+    if (ms != null) return ms;
+    return null;
+  })(); */
+
+  let elapsedMs = preciseMs;
+  if (elapsedMs == null) {
+    elapsedMs = await measureWithWallClock(device, (encoder) => {
+      const pass = encoder.beginComputePass();
+      encode(pass);
+      pass.end();
+    });
+  }
+
+  // Total bytes touched: read A + read B + write C
+  const bytes = size * 3;
+  const gbps = (bytes / (elapsedMs / 1000)) / 1e9;
+
+  return {
+    gbps,
+    elapsedMs,
+    method: preciseMs != null ? 'gpu-timestamps' : 'wall-clock',
+    params: { bufferSizeBytes: size, workgroups, workgroupSize }
+  };
+}
+
+// ———————————————————————————————————————————————————————————————
+// Main entry
+// ———————————————————————————————————————————————————————————————
+async function runWebGPUBenchmark() {
+  const { adapter, adapterInfo, device } = await ensureWebGPU();
+
+  // Collect features/limits
+  const features = [...device.features.values()].sort();
+  const limits = Object.fromEntries(Object.entries(device.limits).sort(([a],[b]) => a.localeCompare(b)));
+
+  // Warm up one tiny pass to avoid first-dispatch jit effects
+  await measureWithWallClock(device, (encoder) => {
+    const pass = encoder.beginComputePass();
+    pass.end();
+  });
+
+  // Do the two benchmarks
+  const [flops, mem] = await Promise.all([
+    measureFlops(device),
+    measureBandwidth(device)
+  ]);
+
+  const result = {
+    timestamp: new Date().toISOString(),
+    adapter: {
+      // Many browsers avoid exposing vendor/device for privacy; include when available
+      info: adapterInfo || null,
+      // Non-standard in some implementations:
+      name: adapter.name ?? undefined, // may be undefined
+      isFallbackAdapter: adapter.isFallbackAdapter ?? undefined
+    },
+    features,
+    limits,
+    metrics: {
+      computeFP32_GFLOPs: Number(flops.gflops.toFixed(1)),
+      compute_time_ms: Math.round(flops.elapsedMs),
+      compute_timing_method: flops.method,
+      memBandwidth_GBps: Number(mem.gbps.toFixed(1)),
+      mem_time_ms: Math.round(mem.elapsedMs),
+      mem_timing_method: mem.method,
+    },
+    notes: [
+      "Numbers are approximate. Background activity, power state, and drivers can affect results.",
+      "If 'timestamp-query' wasn’t available, timings use wall-clock and include scheduling overhead.",
+      "FLOPs figure assumes (mul+add) = 2 FLOPs. Some GPUs may fuse to FMA.",
+    ],
+  };
+
+  console.log('WebGPU Benchmark Result:', result);
+  return result;
+}
+
+
+
+
 
 await BaseLineFeatures.myCheckBaseLinefeatures()
 

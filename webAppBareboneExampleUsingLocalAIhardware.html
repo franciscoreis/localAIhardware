@@ -8,11 +8,12 @@
 
       async function initialize()
       {
+          const url = document.location.hostname === "localhost"
+                        ? "http://" + document.location.host + "/localAIhardware/localAIhardware.mjs"
+                        : "https://localAIhardware.com/localAIhardware.mjs"
           const {
                     default: LocalAIhardware,
-                } = await import(
-                    "https://localAIhardware.com/localAIhardware.mjs"
-                )
+                } = await import(url)
         window.LocalAIhardware = LocalAIhardware
       }
 
@@ -36,7 +37,7 @@
                 popover.innerHTML = "<table style='width:100%'><td style='width:1px'><img src='https://localaihardware.com/localaihardware_logo_507X168.jpg' style='height:40px'></td>"
                         + "<td style='text-align:center'>AI <b style='color:green'>"+ type +"</b></td>"
                         + "<td onClick='document.getElementById(\"my-popover\").hidePopover()' style='cursor:pointer;width:1px;color:red'><b>&nbsp;X&nbsp;</b></td></tr></table><br><br><div id='"+elemID+"' style='display:inline-block'></div>"
-                LocalAIhardware.sortBest(type, elemID, "only_sortBest", true, "window.call_localAIhardware_SORT_BEST")
+                LocalAIhardware.sortBest(type, elemID, "only_sortBest", true, "window.call_localAIhardware_SORT_BEST", "info_about_current_device")
                 popover.showPopover()
       }
 
@@ -56,10 +57,11 @@
 </select>
 <br>
 <br>
-<br>
 Select type of AI and then click on the best AI engine/model.
+<br>
+<br>
+<div id="info_about_current_device" style="max-width:330px"></div>
 <br>&nbsp;
-
 <div popover id="my-popover"></div>
 </center>
 </body>
