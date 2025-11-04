@@ -11,4 +11,9 @@ In user mode, the text is translated to the browser current language if Chrome B
 
 JavaScript to access and manipulate data about how different Local AI systems perform under different hardware and software contexts.
 
+Roadmap
+  + More AI processing types (summary, translations, chat, ...)
+  + Define WebGPU performance steps to be useful in sorting (continuous values explode data grid)
+  + Icons for browsers and improve UserAgent mapping (Linux => Android, ...)
+
 Under construction available at https://localAIhardware.com 
