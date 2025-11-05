@@ -200,8 +200,15 @@ async function update_localAIhardware_mainTable(numView)
     if(!s)
       s = menuSelectModelType(numView)
 
-    document.getElementById("localAIhardware_mainTable").innerHTML = s
+    setElementIDinnerHTML("localAIhardware_mainTable", s)
 
+}
+//-------------------------------------
+function setElementIDinnerHTML(elementID, s)
+{
+    const elemID = document.getElementById(elementID)
+    if(elemID)
+        elemID.innerHTML = s
 }
 //-------------------------------------
 function titleDropDrown(title, body, opened)
@@ -234,8 +241,7 @@ async function setUserMode(userMode_param, elemIDforInnerHTML)
                     targetLanguage: userLanguage,
                     monitor(m) {
                         m.addEventListener('downloadprogress', (e) => {
-                            if(elemIDforInnerHTML)
-                                document.getElementById(elemIDforInnerHTML).innerHTML = e.loaded * 100 + "% loading translations..."
+                            setElementIDinnerHTML(elemIDforInnerHTML, e.loaded * 100 + "% loading translations...")
                             // e.loaded * 100
                         });
                     },
@@ -562,7 +568,7 @@ async function bestSettingsForThisType(type = lastType_bestSettingsForThisType, 
         result = s + "<br><br>" + sortBest + s2
 
 
-    document.getElementById(elemIDforInnerHTML).innerHTML = result + "<br>&nbsp;"
+    setElementIDinnerHTML(elemIDforInnerHTML, result + "<br>&nbsp;")
 }
 //-----------------------------------------------------------------
 function boldIf(loadCharProc_param, minAVERAGEmax_param, s)
@@ -686,12 +692,11 @@ function baselineFeaturesAvailableToText()
 async function viewDataGridHTML(reload)
 {
    lastGridViewed = "viewDataGridHTML"
-    document.getElementById("localAIhardware_mainTable").innerHTML =
-
+   setElementIDinnerHTML("localAIhardware_mainTable",
         "<br><button onClick='window.LocalAIhardware.update_localAIhardware_mainTable()' style='padding:6px;border-radius:10px'>View Browser Compatibility Grid</button>"
         + " &nbsp; &nbsp; <button onCLick='window.LocalAIhardware.viewDataGridHTML(true)' style='background-color:#fdd'>reload</button>"
         + "<br><br>"
-        + await viewDataGrid(reload)
+        + await viewDataGrid(reload))
 
 }
 //-----------------------------------------------------------------
@@ -1569,15 +1574,15 @@ If Meridian proved anything, it’s that trust and clarity define whether knowle
 //-------------------------------------------------------------------
 static async calculateTimes()
 {
-    document.getElementById("loadingDuration_" + firstOrSecond).innerHTML = "waiting..."
-    document.getElementById("firstCharDuration_" + firstOrSecond).innerHTML = "waiting..."
-    document.getElementById("processingDuration_" + firstOrSecond).innerHTML = "waiting..."
+    setElementIDinnerHTML("loadingDuration_" + firstOrSecond, "waiting...")
+    setElementIDinnerHTML("firstCharDuration_" + firstOrSecond, "waiting...")
+    setElementIDinnerHTML("processingDuration_" + firstOrSecond, "waiting...")
 
     //after click can give a better result!!!
     document.getElementById("navigator_deviceMemory").value = navigator.deviceMemory
     const result = await navigator.storage.estimate()
     const memorySizeForOriginPrivateFileSystem = result.quota
-    document.getElementById("navigator_memorydisk").innerHTML = formatBytes(memorySizeForOriginPrivateFileSystem)
+    setElementIDinnerHTML("navigator_memorydisk", formatBytes(memorySizeForOriginPrivateFileSystem))
 
     textAreaProcessing = document.getElementById("textResponse")
     textAreaProcessing.innerHTML = "processing..."
@@ -1604,14 +1609,14 @@ static async calculateTimes()
     processingDuration[firstOrSecond] = timeProcessing - timeMakeActive
     firstCharDuration[firstOrSecond] = firstCharTime ? firstCharTime - timeMakeActive : processingDuration[firstOrSecond]
 
-    document.getElementById("loadingDuration_" + firstOrSecond).innerHTML = loadingDuration[firstOrSecond].toFixed(1) + " ms"
-    document.getElementById("firstCharDuration_" + firstOrSecond).innerHTML = firstCharDuration[firstOrSecond].toFixed(1) + " ms"
-    document.getElementById("processingDuration_" + firstOrSecond).innerHTML = processingDuration[firstOrSecond].toFixed(1) + " ms"
+    setElementIDinnerHTML("loadingDuration_" + firstOrSecond, loadingDuration[firstOrSecond].toFixed(1) + " ms")
+    setElementIDinnerHTML("firstCharDuration_" + firstOrSecond, firstCharDuration[firstOrSecond].toFixed(1) + " ms")
+    setElementIDinnerHTML("processingDuration_" + firstOrSecond, processingDuration[firstOrSecond].toFixed(1) + " ms")
 
     if(firstOrSecond === 0)
     {
         firstOrSecond = 1
-        document.getElementById("button_calculate_first_second").innerHTML = "calculate second"
+        setElementIDinnerHTML("button_calculate_first_second", "calculate second")
     }
     else
     {
@@ -1727,7 +1732,7 @@ let s = ""
            + "</center>"
 
 if(placeInThisElemID)
-  return document.getElementById(placeInThisElemID).innerHTML = s
+  return setElementIDinnerHTML(placeInThisElemID, s)
 
 if(justReturnString)
     return s
@@ -3520,7 +3525,7 @@ const adapter = await navigator.gpu.requestAdapter({
     s += "\nMax storage buffer binding size: " + limits.maxStorageBufferBindingSize
 
     last_webgpu_static_info = s
-    document.getElementById("webgpu_static_info").innerHTML = last_webgpu_static_info
+    setElementIDinnerHTML("webgpu_static_info", last_webgpu_static_info)
 
 
     if(callAtEnd)
@@ -3627,7 +3632,7 @@ if (!navigator.gpu) {
         + " computeFP32_GFLOPs=" + results.metrics.computeFP32_GFLOPs
         + " memBandwidth_GBps=" + results.metrics.memBandwidth_GBps
 
-  document.getElementById("webgpu_dynamic_info").innerHTML = last_webgpu_dynamic_info
+  setElementIDinnerHTML("webgpu_dynamic_info", last_webgpu_dynamic_info)
 
 
     if(callAtEnd)
