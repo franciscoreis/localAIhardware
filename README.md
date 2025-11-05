@@ -1,3 +1,6 @@
+
+![localaihardware_logo_507X168](https://github.com/user-attachments/assets/4a3160cb-2d39-4684-9745-a553725f9c72)
+
 # localAIhardware
 Performance of Local AI engines and models in different hardware and baseline features.
 
