@@ -16,4 +16,5 @@ Roadmap
   + Define WebGPU performance steps to be useful in sorting (continuous values explode data grid)
   + Icons for browsers and improve UserAgent mapping (Linux => Android, ...)
 
-Under construction available at https://localAIhardware.com 
+Under construction available at https://localAIhardware.com
+Web app example at https://localAIhardware.com/webAppBareboneExampleUsingLocalAIhardware.html 
