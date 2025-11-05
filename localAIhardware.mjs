@@ -557,7 +557,7 @@ async function bestSettingsForThisType(type = lastType_bestSettingsForThisType, 
                  + "<td>" + boldIf(23, 0, llmmodelTypeToMinMax.averageProcessingDuration_1.toFixed(1)) + "<br>" + boldIf(23, -1, llmmodelTypeToMinMax.minProcessingDuration_1) + " &nbsp; " + boldIf(23, 1, llmmodelTypeToMinMax.maxProcessingDuration_1)
                  + "</tr>"
          }
-         sortBest += "</table><br>" + await translate("Notes: sorted from fastest to slowest. Samples are compatible with your browser and operating system.")
+         sortBest += "</table><br>" + await translate("Notes: sorted from fastest to slowest according to browser and operating system.")
 
      } //size > 0
 
