@@ -1629,6 +1629,12 @@ static calculate_llmID_modelName(llm_uniqueID, modelOfMyLLM_name)
     firstOrSecond = 0
 
     const llm = MyLLMroot.mapIDtoMyLLMs.get(llm_uniqueID)
+    if(llm.getAvailability() === MyLLMroot.STATE_AVAILABILITY_UNAVAILABLE)
+        return showMessageErrorOnSOSforDuration("LLM not available")
+    if(llm.getAvailability() === MyLLMroot.STATE_AVAILABILITY_AVAILABLE)
+        return showMessageErrorOnSOSforDuration("LLM needs API user key")
+
+
     const arrayOfModels = llm.modelsOfLLMwithName(modelOfMyLLM_name, ModelOfMyLLMroot.selectedModelType)
     if(arrayOfModels.length === 0)
         alert("no models of llm")
